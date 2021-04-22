@@ -10,7 +10,6 @@ Podfile.lock
 .DS_Store
 
 ## Build generated
-build/
 DerivedData/
 
 ## Various settings
