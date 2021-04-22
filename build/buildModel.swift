@@ -9,6 +9,7 @@ import Foundation
 
 struct Model: Codable {
     var productPath: String
+    var teamID: String
     var productScheme: String?
     var productName: String?
     var productConfiguration: String

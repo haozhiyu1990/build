@@ -12,7 +12,6 @@ class build {
     var workingSpace: String
     var configPath: String = ""
     var checkoutPath: String = ""
-    var productPath: String = ""
     var archivePath: String = ""
     var configModel: Model!
 
@@ -34,7 +33,7 @@ class build {
         checkaArguments()
     }
     
-    func checkConfigModel() {
+    func checkConfigModel(_ exprot: Bool) {
         if Files.fileExists(atPath: configModel.productPath) {
             var productUrl = URL(fileURLWithPath: configModel.productPath)
             switch productUrl.pathExtension {
@@ -102,7 +101,13 @@ class build {
             return
         }
         
-        startBuild()
+        creatExortConfig()
+        
+        if exprot {
+            exportArchive()
+        } else {
+            startBuild()
+        }
     }
     
     func startBuild() {
@@ -118,7 +123,7 @@ class build {
         }
     }
     
-    func startArchive() {
+    func exportArchive() {
         var archiveUrl = URL(fileURLWithPath: archivePath)
         archiveUrl.deleteLastPathComponent()
         do {
@@ -131,7 +136,7 @@ class build {
         }
     }
     
-    func analysisConfig(_ config: String) {
+    func analysisConfig(_ config: String,_ exprot: Bool) {
         var arr = config.components(separatedBy: "\n")
         arr = arr.compactMap { (item) -> String? in
             if item.contains("//") {
@@ -172,7 +177,7 @@ class build {
         }
         checkoutPath = configPath + "/\(Date().toString)"
         configModel = model
-        checkConfigModel()
+        checkConfigModel(exprot)
     }
     
     func checkaArguments() {
@@ -189,13 +194,17 @@ class build {
             // productPath\t\t 对应项目的路径
             // productScheme\t\t 对应项目的Scheme
             // productConfiguration\t 对应项目的 configuration  分别为 Release 和  Debug
+            // teamID\t\t 对应的账号 teamID
 
-            productPath = \(productPath.count > 0 ? productPath : "xxx")
+            productPath = xxx // 必传项
             //productScheme = xxx\t // productScheme默认为项目名, 如果您的productScheme和项目名不一致，请移除注释, 自行配置
             productConfiguration = Release  // 默认为 Release
+            teamID = xxx // 必传项
             """)
         stream.close()
-        
+    }
+    
+    func creatExortConfig() {
         guard let plist = try? open(forWriting: configPath + "/ExportOptions.plist", overwrite: true) else { return }
         plist.write("""
             <?xml version="1.0" encoding="UTF-8"?>
@@ -211,7 +220,7 @@ class build {
                 <key>stripSwiftSymbols</key>
                 <true/>
                 <key>teamID</key>
-                <string>P8HFWU8B38</string>
+                <string>\(configModel.teamID)</string>
                 <key>thinning</key>
                 <string>&lt;none&gt;</string>
             </dict>
@@ -224,43 +233,37 @@ class build {
     func implementCommand(_ command: String) {
         configPath = workingSpace + "/auto-build-product"
         
-        if Files.fileExists(atPath: command) {
-            productPath = command
-
-            creatConfig()
-            guard let config = try? String(contentsOfFile: configPath + "/buildConfig", encoding: .utf8) else {
-                log.shared.red.line("[!] 请选运行 init ")
-                return
-            }
-            analysisConfig(config)
-            return
-        }
-        
         switch command {
         case "init":
-            if arguments.count > 2 {
-                productPath = arguments[2]
+            if arguments.count == 2 {
+                creatConfig()
+            } else {
+                log.shared.red.word("您是想用：")
+                log.shared.green.word("\(command)")
+                log.shared.red.line("?")
+                help()
             }
-            
-            if Files.fileExists(atPath: configPath + "/buildConfig"), arguments.count == 2 {
-                return
-            }
-            
-            creatConfig()
-            
-        case "checkout":
+        case "export":
             if Files.fileExists(atPath: configPath + "/buildConfig") {
                 guard let config = try? String(contentsOfFile: configPath + "/buildConfig", encoding: .utf8) else {
                     log.shared.red.line("[!] 请选运行 init ")
                     return
                 }
                 
-                if arguments.count > 2 {
-                    archivePath = arguments[2]
-                    startArchive()
+                if arguments.count == 4, arguments[2] == "-p" {
+                    archivePath = arguments[3]
+                    analysisConfig(config, true)
                     return
                 }
-                analysisConfig(config)
+                
+                if arguments.count == 2 {
+                    analysisConfig(config, false)
+                } else {
+                    log.shared.red.word("您是想用：")
+                    log.shared.green.word("\(command)")
+                    log.shared.red.line("?")
+                    help()
+                }
             } else {
                 log.shared.red.line("[!] 请选运行 init ")
             }
@@ -295,29 +298,20 @@ class build {
         log.shared.word("\t$")
         log.shared.green.line(" build COMMAND")
         log.shared.line("")
-        log.shared.line("\t  build, 用于自动化打包工具, 导出路径为当前路径")
-        log.shared.line("")
-        log.shared.word("\t$")
-        log.shared.green.line(" build (productPaht)")
-        log.shared.line("")
-        log.shared.line("\t  快速打包方法, 直接拖入要打包的项目文件路径, 导出路径为当前路径")
+        log.shared.line("\t  build, 自动化打包工具, 导出路径为当前路径")
         log.shared.line("")
         log.shared.underline.line("Commands:")
         log.shared.line("")
-        log.shared.green.word("\t+ init (productPath)")
-        log.shared.line("\t\t用于创建一个 BuildConfig 文件, 括号里为")
-        log.shared.line("\t\t\t\t\t可选参数, 若不传, 请自行在 BuildConfig")
-        log.shared.line("\t\t\t\t\t文件里配置")
-        log.shared.line("")
-        log.shared.green.word("\t+ checkout (xcarchivePath)")
-        log.shared.line("\t自动导出 .ipa 文件, 括号里是 archive")
-        log.shared.line("\t\t\t\t\t生成的 .xcarchive 文件，若不传，则重新")
-        log.shared.line("\t\t\t\t\tarchive 一个，并导出 .ipa 文件")
+        log.shared.green.word("\t+ init")
+        log.shared.line("\t\t用于创建一个 BuildConfig 文件")
+        log.shared.green.word("\t+ export [-p]")
+        log.shared.line("\t自动 Archive 并导出 .ipa 文件, -p, (archivePath)")
+        log.shared.line("\t\t\t要导出的 .xcarchive 文件")
         log.shared.line("")
         log.shared.underline.line("Options:")
         log.shared.line("")
         log.shared.blue.word("\t--help")
-        log.shared.line("\t\t\t\t显示帮助文档")
+        log.shared.line("\t\t显示帮助文档")
         log.shared.line("")
     }
 }
