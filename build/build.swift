@@ -103,7 +103,7 @@ class build {
             return
         }
         
-        checkoutPath = configModel.productPath + "/\(Date().toString)"
+        checkoutPath = configModel.productPath + "/autoBuild/\(Date().toString)"
         creatExortConfig()
         
         if exprot {
@@ -118,7 +118,7 @@ class build {
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild clean")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild archive -\(configModel.isHasPod! ? "workspace" : "project") \(configModel.productName!).\(configModel.isHasPod! ? "xcworkspace" : "xcodeproj") -scheme \(configModel.productScheme!) -configuration \(configModel.productConfiguration) -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild -exportArchive -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive -exportPath \(checkoutPath) -exportOptionsPlist \(configPath)/ExportOptions.plist")
-            try runAndPrint(bash: "cd \(workingSpace); open -R \(checkoutPath)")
+            uploadFir()
         } catch let error as CommandError {
             log.shared.red.line(error.description)
         } catch {
@@ -131,11 +131,25 @@ class build {
         archiveUrl.deleteLastPathComponent()
         do {
             try runAndPrint(bash: "xcodebuild -exportArchive -archivePath \(archivePath) -exportPath \(archiveUrl.path) -exportOptionsPlist \(configPath)/ExportOptions.plist")
-            try runAndPrint(bash: "cd \(workingSpace); open -R \(archiveUrl.path)")
+            uploadFir()
         } catch let error as CommandError {
             log.shared.red.line(error.description)
         } catch {
             log.shared.red.line(error.localizedDescription)
+        }
+    }
+    
+    func uploadFir() {
+        if Files.fileExists(atPath: checkoutPath) {
+            var ipaUrl = URL(fileURLWithPath: checkoutPath)
+            let contents = try! Files.contentsOfDirectory(atPath: ipaUrl.path)
+            let ipas = contents.filter { $0.hasSuffix(".ipa") }
+            if ipas.count == 0 {
+                return
+            }
+            ipaUrl.appendPathComponent(ipas.first!)
+            
+            
         }
     }
     
@@ -376,6 +390,7 @@ class build {
                 
                 if arguments.count == 4, arguments[2] == "-p" {
                     archivePath = arguments[3]
+                    buildName = URL(fileURLWithPath: archivePath).deletingPathExtension().pathComponents.last!
                     analysisConfig(config, true)
                     return
                 }
