@@ -14,4 +14,10 @@ struct Model: Codable {
     var productName: String?
     var productConfiguration: String
     var isHasPod: Bool?
+    var provisioningProfiles: [Profile]?
+}
+
+struct Profile: Codable {
+    var profileName: String
+    var BundleId: String
 }
