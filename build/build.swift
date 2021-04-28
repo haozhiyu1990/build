@@ -15,6 +15,7 @@ class build {
     var archivePath: String = ""
     var ipaPath: String = ""
     var buildName: String = ""
+    var commitMsg: String = ""
     var configModel: Model!
 
     class func arguments(_ arguments: [String]) {
@@ -121,6 +122,8 @@ class build {
     func startBuild() {
         do {
             try runAndPrint(bash: "cd \(configModel.productPath); git pull")
+            let commitId = run(bash: "cd \(configModel.productPath); git rev-parse HEAD").stdout
+            commitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=format:“%s” \(commitId) -1").stdout
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild clean")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild archive -\(configModel.isHasPod! ? "workspace" : "project") \(configModel.productName!).\(configModel.isHasPod! ? "xcworkspace" : "xcodeproj") -scheme \(configModel.productScheme!) -configuration \(configModel.productConfiguration) -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild -exportArchive -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive -exportPath \(checkoutPath) -exportOptionsPlist \(configPath)/ExportOptions.plist")
@@ -159,7 +162,7 @@ class build {
                 ipaUrl.appendPathComponent(ipas.first!)
                 
                 do {
-                    try runAndPrint(bash: "curl -F 'file=@\(ipaUrl.path)' -F '_api_key=\(configModel._api_key)' https://www.pgyer.com/apiv2/app/upload")
+                    try runAndPrint(bash: "curl -F 'file=@\(ipaUrl.path)' -F '_api_key=\(configModel._api_key)' -F 'buildUpdateDescription=\(commitMsg)' https://www.pgyer.com/apiv2/app/upload")
                     ipaUrl.deleteLastPathComponent()
                     ipaUrl.deleteLastPathComponent()
                     run(bash: "rm -r \(ipaUrl.path)")
@@ -171,7 +174,7 @@ class build {
             }
         } else {
             do {
-                try runAndPrint(bash: "curl -F 'file=@\(ipaPath)' -F '_api_key=\(configModel._api_key)' https://www.pgyer.com/apiv2/app/upload")
+                try runAndPrint(bash: "curl -F 'file=@\(ipaPath)' -F '_api_key=\(configModel._api_key)' -F 'buildUpdateDescription=\(commitMsg)' https://www.pgyer.com/apiv2/app/upload")
             } catch let error as CommandError {
                 log.shared.red.line(error.description)
             } catch {
