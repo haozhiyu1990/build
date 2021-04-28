@@ -159,6 +159,9 @@ class build {
                 
                 do {
                     try runAndPrint(bash: "curl -F 'file=@\(ipaUrl.path)' -F '_api_key=\(configModel._api_key)' https://www.pgyer.com/apiv2/app/upload")
+                    ipaUrl.deleteLastPathComponent()
+                    ipaUrl.deleteLastPathComponent()
+                    run(bash: "rm -r \(ipaUrl.path)")
                 } catch let error as CommandError {
                     log.shared.red.line(error.description)
                 } catch {
