@@ -15,6 +15,7 @@ struct Model: Codable {
     var productConfiguration: String
     var isHasPod: Bool?
     var provisioningProfiles: [Profile]?
+    var _api_key: String
 }
 
 struct Profile: Codable {

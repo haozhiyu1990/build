@@ -13,6 +13,7 @@ class build {
     var configPath: String = ""
     var checkoutPath: String = ""
     var archivePath: String = ""
+    var ipaPath: String = ""
     var buildName: String = ""
     var configModel: Model!
 
@@ -107,6 +108,10 @@ class build {
         creatExortConfig()
         
         if exprot {
+            if ipaPath.count > 0 {
+                uploadFir()
+                return
+            }
             exportArchive()
         } else {
             startBuild()
@@ -129,8 +134,10 @@ class build {
     func exportArchive() {
         var archiveUrl = URL(fileURLWithPath: archivePath)
         archiveUrl.deleteLastPathComponent()
+        checkoutPath = archiveUrl.path
+        
         do {
-            try runAndPrint(bash: "xcodebuild -exportArchive -archivePath \(archivePath) -exportPath \(archiveUrl.path) -exportOptionsPlist \(configPath)/ExportOptions.plist")
+            try runAndPrint(bash: "xcodebuild -exportArchive -archivePath \(archivePath) -exportPath \(checkoutPath) -exportOptionsPlist \(configPath)/ExportOptions.plist")
             uploadFir()
         } catch let error as CommandError {
             log.shared.red.line(error.description)
@@ -140,20 +147,37 @@ class build {
     }
     
     func uploadFir() {
-        if Files.fileExists(atPath: checkoutPath) {
-            var ipaUrl = URL(fileURLWithPath: checkoutPath)
-            let contents = try! Files.contentsOfDirectory(atPath: ipaUrl.path)
-            let ipas = contents.filter { $0.hasSuffix(".ipa") }
-            if ipas.count == 0 {
-                return
+        if ipaPath.count == 0 {
+            if Files.fileExists(atPath: checkoutPath) {
+                var ipaUrl = URL(fileURLWithPath: checkoutPath)
+                let contents = try! Files.contentsOfDirectory(atPath: ipaUrl.path)
+                let ipas = contents.filter { $0.hasSuffix(".ipa") }
+                if ipas.count == 0 {
+                    return
+                }
+                ipaUrl.appendPathComponent(ipas.first!)
+                
+                do {
+                    try runAndPrint(bash: "curl -F 'file=@\(ipaUrl.path)' -F '_api_key=\(configModel._api_key)' https://www.pgyer.com/apiv2/app/upload")
+                } catch let error as CommandError {
+                    log.shared.red.line(error.description)
+                } catch {
+                    log.shared.red.line(error.localizedDescription)
+                }
             }
-            ipaUrl.appendPathComponent(ipas.first!)
-            
-            
+        } else {
+            do {
+                try runAndPrint(bash: "curl -F 'file=@\(ipaPath)' -F '_api_key=\(configModel._api_key)' https://www.pgyer.com/apiv2/app/upload")
+            } catch let error as CommandError {
+                log.shared.red.line(error.description)
+            } catch {
+                log.shared.red.line(error.localizedDescription)
+            }
         }
     }
     
     func analysisConfig(_ config: String,_ exprot: Bool) {
+        // 去注释
         var configArr = config.components(separatedBy: "\n").compactMap { (item) -> String? in
             if item.contains("#") {
                 return item.components(separatedBy: "#").first
@@ -161,6 +185,8 @@ class build {
             return item
         }
         var configStr = configArr.joined(separator: "\n")
+        
+        // 转译引号(" ')里的空格
         configArr = configStr.components(separatedBy: "'").enumerated().map { (idx, value) -> String in
             if idx % 2 == 1 {
                 return value.replacingOccurrences(of: " ", with: "*")
@@ -175,8 +201,12 @@ class build {
             return value
         }
         configStr = configArr.joined(separator: "\"")
+            
+        // 去掉 " '
         configStr = configStr.replacingOccurrences(of: "'", with: "")
         configStr = configStr.replacingOccurrences(of: "\"", with: "")
+        
+        // 去掉多余的空格， 只留一个
         configArr = configStr.components(separatedBy: " ").compactMap { (item) -> String? in
             if item.count == 0 {
                 return nil
@@ -184,6 +214,8 @@ class build {
             return item
         }
         configStr = configArr.joined(separator: " ")
+        
+        // 去掉多余的换行， 只留一个
         configArr = configStr.components(separatedBy: "\n").compactMap { (item) -> String? in
             if item.count == 0 {
                 return nil
@@ -194,6 +226,7 @@ class build {
             return item.trimmingCharacters(in: .whitespaces)
         }
         configStr = configArr.joined(separator: "\n")
+        
         configArr = configStr.components(separatedBy: "end")
         configArr = configArr.filter { $0.contains("product \(buildName) do") }
         if configArr.count != 1 {
@@ -201,6 +234,7 @@ class build {
             run(bash: "open -R \(configPath)")
             return
         }
+        
         configStr = configArr.first!.replacingOccurrences(of: " ", with: "")
         configStr = configStr.replacingOccurrences(of: "[", with: "")
         configStr = configStr.replacingOccurrences(of: "]", with: "")
@@ -291,11 +325,13 @@ class build {
                 # productConfiguration\t\t 对应项目的 configuration  分别为 Release 和  Debug
                 # teamID\t\t\t\t\t 对应的账号 teamID
                 # provisioningProfiles\t\t 如果要手动选择证书和配置文件的话，请填写此项
+                # _api_key\t\t\t\t\t 蒲公英api key
 
                 productPath = 'xxx'\t  # 必传项
                 #productScheme = 'xxx'\t  # productScheme默认为项目名, 如果您的productScheme和项目名不一致，请移除注释, 自行配置
                 productConfiguration = 'Release'\t  # 默认为 Release
                 teamID = 'xxx'\t  # 必传项
+                _api_key = 'xxx'\t  # 必传项
 
                 # 如果有多个target e.g. [(BundleId: 'bundleid1', profileName: 'name1'), (BundleId: 'bundleid2', profileName: 'name2')]
                 #provisioningProfiles = [(BundleId: 'xxx', profileName: 'xxx')]\t
@@ -395,6 +431,13 @@ class build {
                     return
                 }
                 
+                if arguments.count == 6, arguments[2] == "-u", arguments[4] == "-t" {
+                    ipaPath = arguments[3]
+                    buildName = arguments[5]
+                    analysisConfig(config, true)
+                    return
+                }
+                
                 if arguments.count == 4, arguments[2] == "-m" {
                     buildName = arguments[3]
                     analysisConfig(config, false)
@@ -443,15 +486,25 @@ class build {
         log.shared.underline.line("Commands:")
         log.shared.line("")
         log.shared.green.word("\t+ init")
-        log.shared.line("\t\t用于创建一个 BuildConfig 文件")
-        log.shared.green.line("\t+ export [-m, -p]")
-        log.shared.line("\t\t\t自动 Archive 并导出 .ipa 文件, -m, (productName) 要打包")
-        log.shared.line("\t\t\t的项目名, -p, (archivePath) 要导出的 .xcarchive 文件")
+        log.shared.line("\t用于创建一个 BuildConfig 文件")
+        log.shared.line("")
+        log.shared.green.line("\t+ export [-m, -p, -u, -t]")
+        log.shared.line("")
+        log.shared.line("\t自动 Archive 并导出 .ipa 文件")
+        log.shared.yellow.line("\t在用 -u 命令的时候， -t 一定要传")
+        log.shared.word("\t-m (productName)\t")
+        log.shared.line("要打包的项目名,")
+        log.shared.word("\t-p (archivePath)\t")
+        log.shared.line("要导出的 .xcarchive 文件，")
+        log.shared.word("\t-u (ipaPath)\t\t")
+        log.shared.line("要上传的 .ipa 文件包, ")
+        log.shared.word("\t-t (target)\t\t")
+        log.shared.line("上传 .ipa 包的时候， target 对应的工程Name")
         log.shared.line("")
         log.shared.underline.line("Options:")
         log.shared.line("")
         log.shared.blue.word("\t--help")
-        log.shared.line("\t\t显示帮助文档")
+        log.shared.line("\t显示帮助文档")
         log.shared.line("")
     }
 }
