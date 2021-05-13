@@ -22,3 +22,15 @@ struct Profile: Codable {
     var profileName: String
     var BundleId: String
 }
+
+struct IpaModel: Codable {
+    var data: IpaModelData
+}
+
+struct IpaModelData: Codable {
+    var buildName: String
+    var buildVersion: String
+    var buildBuildVersion: String
+    var buildShortcutUrl: String
+    var buildQRCodeURL: String
+}

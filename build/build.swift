@@ -17,6 +17,7 @@ class build {
     var buildName: String = ""
     var commitMsg: String = ""
     var configModel: Model!
+    var dingtalkWebhook: String = ""
 
     class func arguments(_ arguments: [String]) {
         let builder = build(arguments: arguments)
@@ -161,11 +162,26 @@ class build {
                 }
                 ipaUrl.appendPathComponent(ipas.first!)
                 
+                let uploadFirDataString = run(bash: "curl -F 'file=@\(ipaUrl.path)' -F '_api_key=\(configModel._api_key)' -F 'buildUpdateDescription=\(commitMsg)' https://www.pgyer.com/apiv2/app/upload").stdout
+                guard let uploadFirData = uploadFirDataString.data(using: .utf8) else {
+                    log.shared.red.line("蒲公英返回数据有误")
+                    log.shared.red.line(uploadFirDataString)
+                    return
+                }
+                ipaUrl.deleteLastPathComponent()
+                ipaUrl.deleteLastPathComponent()
+                run(bash: "rm -r \(ipaUrl.path)")
                 do {
-                    try runAndPrint(bash: "curl -F 'file=@\(ipaUrl.path)' -F '_api_key=\(configModel._api_key)' -F 'buildUpdateDescription=\(commitMsg)' https://www.pgyer.com/apiv2/app/upload")
-                    ipaUrl.deleteLastPathComponent()
-                    ipaUrl.deleteLastPathComponent()
-                    run(bash: "rm -r \(ipaUrl.path)")
+                    let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
+                    if dingtalkWebhook.count > 0 {
+                        let text = """
+                            ![二维码](\(ipaModel.data.buildQRCodeURL))
+                            [工作通知，\(ipaModel.data.buildName) IOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
+                            """
+                        try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}}'")
+                    } else {
+                        log.shared.green.line("上传蒲公英成功")
+                    }
                 } catch let error as CommandError {
                     log.shared.red.line(error.description)
                 } catch {
@@ -173,8 +189,23 @@ class build {
                 }
             }
         } else {
+            let uploadFirDataString = run(bash: "curl -F 'file=@\(ipaPath)' -F '_api_key=\(configModel._api_key)' -F 'buildUpdateDescription=\(commitMsg)' https://www.pgyer.com/apiv2/app/upload").stdout
+            guard let uploadFirData = uploadFirDataString.data(using: .utf8) else {
+                log.shared.red.line("蒲公英返回数据有误")
+                log.shared.red.line(uploadFirDataString)
+                return
+            }
             do {
-                try runAndPrint(bash: "curl -F 'file=@\(ipaPath)' -F '_api_key=\(configModel._api_key)' -F 'buildUpdateDescription=\(commitMsg)' https://www.pgyer.com/apiv2/app/upload")
+                let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
+                if dingtalkWebhook.count > 0 {
+                    let text = """
+                        ![二维码](\(ipaModel.data.buildQRCodeURL))
+                        [工作通知，\(ipaModel.data.buildName) IOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
+                        """
+                    try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}}'")
+                } else {
+                    log.shared.green.line("上传蒲公英成功")
+                }
             } catch let error as CommandError {
                 log.shared.red.line(error.description)
             } catch {
@@ -193,17 +224,19 @@ class build {
         }
         var configStr = configArr.joined(separator: "\n")
         
-        // 转译引号(" ')里的空格
+        // 转译引号(" ')里的空格和 =
         configArr = configStr.components(separatedBy: "'").enumerated().map { (idx, value) -> String in
             if idx % 2 == 1 {
-                return value.replacingOccurrences(of: " ", with: "*")
+                let newValue = value.replacingOccurrences(of: "=", with: "€")
+                return newValue.replacingOccurrences(of: " ", with: "*")
             }
             return value
         }
         configStr = configArr.joined(separator: "'")
         configArr = configStr.components(separatedBy: "\"").enumerated().map { (idx, value) -> String in
             if idx % 2 == 1 {
-                return value.replacingOccurrences(of: " ", with: "*")
+                let newValue = value.replacingOccurrences(of: "=", with: "€")
+                return newValue.replacingOccurrences(of: " ", with: "*")
             }
             return value
         }
@@ -232,6 +265,16 @@ class build {
             }
             return item.trimmingCharacters(in: .whitespaces)
         }
+        
+        for obj in configArr {
+            if obj.contains("dingtalkWebhook") {
+                if var last = obj.components(separatedBy: "=").last {
+                    last = last.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "*", with: " ")
+                    dingtalkWebhook = last.replacingOccurrences(of: "€", with: "=")
+                }
+                break
+            }
+        }
         configStr = configArr.joined(separator: "\n")
         
         configArr = configStr.components(separatedBy: "end")
@@ -246,7 +289,6 @@ class build {
         configStr = configStr.replacingOccurrences(of: "[", with: "")
         configStr = configStr.replacingOccurrences(of: "]", with: "")
         configStr = configStr.replacingOccurrences(of: "),\n(", with: "),(")
-        configStr = configStr.replacingOccurrences(of: "*", with: " ")
         configArr = configStr.components(separatedBy: "\n")
         configArr = configArr.filter { $0.contains("=") }
         
@@ -259,20 +301,19 @@ class build {
         }
         
         keys = keys.compactMap { (item) -> String? in
-            let new = item.trimmingCharacters(in: .whitespaces)
-            if new.count == 0 {
+            if item.count == 0 {
                 return nil
             }
-            return new
+            let new = item.replacingOccurrences(of: "*", with: " ")
+            return new.replacingOccurrences(of: "€", with: "=")
         }
         values = values.compactMap { (item) -> Any? in
             if let strItem = item as? String {
-                let new = strItem.trimmingCharacters(in: .whitespaces)
-                if new.count == 0 {
+                if strItem.count == 0 {
                     return nil
                 }
-                if new.hasPrefix("(") {
-                    let newArr = new.components(separatedBy: "),").compactMap { (item) -> String? in
+                if strItem.hasPrefix("(") {
+                    let newArr = strItem.components(separatedBy: "),").compactMap { (item) -> String? in
                         if item.count == 0 {
                             return nil
                         }
@@ -289,11 +330,25 @@ class build {
                             objKeys.append(subObj.components(separatedBy: ":").first)
                             objValues.append(subObj.components(separatedBy: ":").last)
                         }
-                        newObjArr.append(Dictionary(uniqueKeysWithValues: zip(objKeys, objValues)))
+                        
+                        let newKeys = objKeys.compactMap { key -> String? in
+                            if let newKey = key?.replacingOccurrences(of: "*", with: " ") {
+                                return newKey.replacingOccurrences(of: "€", with: "=")
+                            }
+                            return nil
+                        }
+                        let newValues = objValues.compactMap { value -> String? in
+                            if let newValue = value?.replacingOccurrences(of: "*", with: " ") {
+                                return newValue.replacingOccurrences(of: "€", with: "=")
+                            }
+                            return nil
+                        }
+                        newObjArr.append(Dictionary(uniqueKeysWithValues: zip(newKeys, newValues)))
                     }
                     return newObjArr
                 }
-                return new
+                let new = strItem.replacingOccurrences(of: "*", with: " ")
+                return new.replacingOccurrences(of: "€", with: "=")
             }
             return nil
         }
@@ -325,7 +380,10 @@ class build {
         stream.write("""
             #!/usr/bin/ruby -w
             # 如果有多个项目，请写多个 product 'xxx' do ... end
-
+            
+            # 钉钉自定义机器人的Webhook地址，可用于向这个群发送消息
+            #dingtalkWebhook = ''
+            
             product 'xxx' do
                 # productPath\t\t\t\t 对应项目的路径
                 # productScheme\t\t\t\t 对应项目的Scheme
