@@ -175,8 +175,9 @@ class build {
                     let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
                     if dingtalkWebhook.count > 0 {
                         let text = """
-                            ![二维码](\(ipaModel.data.buildQRCodeURL))
-                            [工作通知，\(ipaModel.data.buildName) IOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
+                            ### 工作通知<br/>
+                            ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
+                            #### \(ipaModel.data.buildName) IOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
                             """
                         try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}}'")
                     } else {
@@ -199,8 +200,9 @@ class build {
                 let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
                 if dingtalkWebhook.count > 0 {
                     let text = """
-                        ![二维码](\(ipaModel.data.buildQRCodeURL))
-                        [工作通知，\(ipaModel.data.buildName) IOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
+                        ### 工作通知<br/>
+                        ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
+                        #### \(ipaModel.data.buildName) IOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
                         """
                     try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}}'")
                 } else {
