@@ -83,7 +83,7 @@
 		C493D2AD262137F800430150 = {
 			isa = PBXGroup;
 			children = (
-				C493D2B8262137F800430150 /* build */,
+				C493D2B8262137F800430150 /* build_product */,
 				C4829C6F26241B0C00748574 /* tools */,
 				C493D2B7262137F800430150 /* Products */,
 			);
@@ -97,7 +97,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		C493D2B8262137F800430150 /* build */ = {
+		C493D2B8262137F800430150 /* build_product */ = {
 			isa = PBXGroup;
 			children = (
 				C4829C8C26241FA200748574 /* log.swift */,
@@ -105,7 +105,7 @@
 				C493D2B9262137F800430150 /* main.swift */,
 				C45CD0BB262FCF50005555EC /* buildModel.swift */,
 			);
-			path = build;
+			path = build_product;
 			sourceTree = "<group>";
 		};
 		C4945E85262D7EBA0063E678 /* SwiftShell */ = {
