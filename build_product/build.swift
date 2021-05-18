@@ -124,7 +124,13 @@ class build {
         do {
             try runAndPrint(bash: "cd \(configModel.productPath); git pull")
             let commitId = run(bash: "cd \(configModel.productPath); git rev-parse HEAD").stdout
-            commitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=format:“%s” \(commitId) -1").stdout
+            let twoCommitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=format:“%s” \(commitId) -2").stdout
+            let commitMsgs = twoCommitMsg.components(separatedBy: "\n")
+            if commitMsgs.first!.hasPrefix("Merge") {
+                commitMsg = commitMsgs.last!
+            } else {
+                commitMsg = commitMsgs.first!
+            }
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild clean")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild archive -\(configModel.isHasPod! ? "workspace" : "project") \(configModel.productName!).\(configModel.isHasPod! ? "xcworkspace" : "xcodeproj") -scheme \(configModel.productScheme!) -configuration \(configModel.productConfiguration) -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild -exportArchive -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive -exportPath \(checkoutPath) -exportOptionsPlist \(configPath)/ExportOptions.plist")
