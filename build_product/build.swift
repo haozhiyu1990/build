@@ -127,20 +127,11 @@ class build {
             let fiveCommitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=format:\"%s %H\" \(lastCommitId) -5").stdout
             let commitMsgs = fiveCommitMsg.components(separatedBy: "\n").filter { !$0.hasPrefix("Merge") }
             if let hasMsgCommitId = commitMsgs.first?.components(separatedBy: " ").last {
-                var lastCommitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=full \(hasMsgCommitId) -1").stdout
-                let clearWhite = lastCommitMsg.components(separatedBy: " ").compactMap { item -> String? in
-                    if item.count == 0 {
-                        return nil
-                    }
-                    return item
+                let lastCommitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=full \(hasMsgCommitId) -1").stdout
+                let lastCommitMsgDetails = lastCommitMsg.components(separatedBy: "\n").filter({ $0.hasPrefix(" ") }).compactMap { item -> String? in
+                    let startIndex = item.index(item.startIndex, offsetBy: 4)
+                    return String(item[startIndex..<item.endIndex])
                 }
-                lastCommitMsg = clearWhite.joined(separator: " ")
-                let lastCommitMsgDetails = lastCommitMsg.components(separatedBy: "\n").compactMap({ item -> String? in
-                    if item.count == 0 || item == " " {
-                        return nil
-                    }
-                    return item
-                }).filter { $0.hasPrefix(" ") }
                 commitMsg = lastCommitMsgDetails.joined(separator: "\n")
             }
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild clean")
