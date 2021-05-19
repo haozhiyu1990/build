@@ -123,13 +123,25 @@ class build {
     func startBuild() {
         do {
             try runAndPrint(bash: "cd \(configModel.productPath); git pull")
-            let commitId = run(bash: "cd \(configModel.productPath); git rev-parse HEAD").stdout
-            let twoCommitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=format:“%s” \(commitId) -2").stdout
-            let commitMsgs = twoCommitMsg.components(separatedBy: "\n")
-            if commitMsgs.first!.hasPrefix("Merge") {
-                commitMsg = commitMsgs.last!
-            } else {
-                commitMsg = commitMsgs.first!
+            let lastCommitId = run(bash: "cd \(configModel.productPath); git rev-parse HEAD").stdout
+            let fiveCommitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=format:\"%s %H\" \(lastCommitId) -5").stdout
+            let commitMsgs = fiveCommitMsg.components(separatedBy: "\n").filter { !$0.hasPrefix("Merge") }
+            if let hasMsgCommitId = commitMsgs.first?.components(separatedBy: " ").last {
+                var lastCommitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=full \(hasMsgCommitId) -1").stdout
+                let clearWhite = lastCommitMsg.components(separatedBy: " ").compactMap { item -> String? in
+                    if item.count == 0 {
+                        return nil
+                    }
+                    return item
+                }
+                lastCommitMsg = clearWhite.joined(separator: " ")
+                let lastCommitMsgDetails = lastCommitMsg.components(separatedBy: "\n").compactMap({ item -> String? in
+                    if item.count == 0 || item == " " {
+                        return nil
+                    }
+                    return item
+                }).filter { $0.hasPrefix(" ") }
+                commitMsg = lastCommitMsgDetails.joined(separator: "\n")
             }
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild clean")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild archive -\(configModel.isHasPod! ? "workspace" : "project") \(configModel.productName!).\(configModel.isHasPod! ? "xcworkspace" : "xcodeproj") -scheme \(configModel.productScheme!) -configuration \(configModel.productConfiguration) -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive")
@@ -265,10 +277,7 @@ class build {
         
         // 去掉多余的换行， 只留一个
         configArr = configStr.components(separatedBy: "\n").compactMap { (item) -> String? in
-            if item.count == 0 {
-                return nil
-            }
-            if item == " " {
+            if item.count == 0 || item == " " {
                 return nil
             }
             return item.trimmingCharacters(in: .whitespaces)
