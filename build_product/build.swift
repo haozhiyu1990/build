@@ -16,6 +16,7 @@ class build {
     var ipaPath: String = ""
     var buildName: String = ""
     var commitMsg: String = ""
+    var commitMsgs: [String] = []
     var configModel: Model!
     var dingtalkWebhook: String = ""
 
@@ -122,18 +123,31 @@ class build {
     
     func startBuild() {
         do {
-            try runAndPrint(bash: "cd \(configModel.productPath); git pull")
-            let lastCommitId = run(bash: "cd \(configModel.productPath); git rev-parse HEAD").stdout
-            let fiveCommitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=format:\"%s %H\" \(lastCommitId) -5").stdout
-            let commitMsgs = fiveCommitMsg.components(separatedBy: "\n").filter { !$0.hasPrefix("Merge") }
-            if let hasMsgCommitId = commitMsgs.first?.components(separatedBy: " ").last {
-                let lastCommitMsg = run(bash: "cd \(configModel.productPath); git log --pretty=full \(hasMsgCommitId) -1").stdout
-                let lastCommitMsgDetails = lastCommitMsg.components(separatedBy: "\n").filter({ $0.hasPrefix(" ") }).compactMap { item -> String? in
-                    let startIndex = item.index(item.startIndex, offsetBy: 4)
-                    return String(item[startIndex..<item.endIndex])
+            run(bash: "cd \(configModel.productPath); git fetch origin")
+            let branchsStr = run(bash: "cd \(configModel.productPath); git branch").stdout
+            let branchs = branchsStr.components(separatedBy: "\n").filter { $0.hasPrefix("*") }
+            if var branch = branchs.first {
+                branch = String(branch.suffix(from: branch.index(branch.startIndex, offsetBy: 2)))
+                let commitMsgsStr = run(bash: "cd \(configModel.productPath); git log \(branch)..origin/\(branch)").stdout
+                if commitMsgsStr.count > 0 {
+                    commitMsgs = commitMsgsStr.components(separatedBy: "commit ").compactMap { item -> String? in
+                        if item.count == 0 || item.contains("\nMerge: ") {
+                            return nil
+                        }
+                        return item
+                    }
+                    commitMsgs = commitMsgs.reversed().enumerated().compactMap { (index, item) -> String? in
+                        let msgs = item.components(separatedBy: "\n\n")
+                        if msgs.count > 1 {
+                            return "\(index+1). "+msgs[1].trimmingCharacters(in: .whitespacesAndNewlines)
+                        }
+                        return nil
+                    }
+                    commitMsg = commitMsgs.map({ $0.replacingOccurrences(of: "\n    ", with: "\n---- ")}).joined(separator: "\n")
+                    commitMsgs = commitMsgs.map { $0.replacingOccurrences(of: "\n    ", with: "<br/>\n> ")}
                 }
-                commitMsg = lastCommitMsgDetails.joined(separator: "\n")
             }
+            try runAndPrint(bash: "cd \(configModel.productPath); git pull")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild clean")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild archive -\(configModel.isHasPod! ? "workspace" : "project") \(configModel.productName!).\(configModel.isHasPod! ? "xcworkspace" : "xcodeproj") -scheme \(configModel.productScheme!) -configuration \(configModel.productConfiguration) -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild -exportArchive -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive -exportPath \(checkoutPath) -exportOptionsPlist \(configPath)/ExportOptions.plist")
@@ -183,11 +197,22 @@ class build {
                 do {
                     let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
                     if dingtalkWebhook.count > 0 {
-                        let text = """
-                            ### 工作通知<br/>
-                            ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
-                            #### \(ipaModel.data.buildName) IOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
-                            """
+                        var text = ""
+                        if commitMsgs.count > 0 {
+                            text = """
+                                ### 工作通知<br/>
+                                ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
+                                #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))<br/>
+                                #### 此版本更新了以下内容：<br/>
+                                \(commitMsgs.joined(separator: "\n"))
+                                """
+                        } else {
+                            text = """
+                                ### 工作通知<br/>
+                                ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
+                                #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
+                                """
+                        }
                         try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'")
                     } else {
                         log.shared.green.line("上传蒲公英成功")
@@ -208,11 +233,22 @@ class build {
             do {
                 let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
                 if dingtalkWebhook.count > 0 {
-                    let text = """
-                        ### 工作通知<br/>
-                        ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
-                        #### \(ipaModel.data.buildName) IOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
-                        """
+                    var text = ""
+                    if commitMsgs.count > 0 {
+                        text = """
+                            ### 工作通知<br/>
+                            ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
+                            #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))<br/>
+                            #### 此版本更新了以下内容：<br/>
+                            \(commitMsgs.joined(separator: "\n"))
+                            """
+                    } else {
+                        text = """
+                            ### 工作通知<br/>
+                            ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
+                            #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
+                            """
+                    }
                     try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'")
                 } else {
                     log.shared.green.line("上传蒲公英成功")
@@ -258,12 +294,7 @@ class build {
         configStr = configStr.replacingOccurrences(of: "\"", with: "")
         
         // 去掉多余的空格， 只留一个
-        configArr = configStr.components(separatedBy: " ").compactMap { (item) -> String? in
-            if item.count == 0 {
-                return nil
-            }
-            return item
-        }
+        configArr = configStr.components(separatedBy: " ").filter { $0.count != 0 }
         configStr = configArr.joined(separator: " ")
         
         // 去掉多余的换行， 只留一个
