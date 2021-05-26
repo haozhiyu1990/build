@@ -328,7 +328,7 @@ class build {
         
         configStr = configArr.joined(separator: "\n")
         
-        configArr = configStr.components(separatedBy: "end")
+        configArr = configStr.components(separatedBy: "\nend")
         configArr = configArr.filter { $0.contains("product \(buildName) do") }
         if configArr.count != 1 {
             log.shared.red.line("[!] 配置文件有误，请前往\(configPath + "/buildConfig")查看")
