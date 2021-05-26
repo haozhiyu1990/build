@@ -214,6 +214,7 @@ class build {
                 ipaUrl.deleteLastPathComponent()
                 run(bash: "rm -r \(ipaUrl.path)")
                 run(bash: "rm \(configPath)/change.log")
+                run(bash: "rm \(configPath)/ExportOptions.plist")
                 do {
                     let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
                     if let dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
