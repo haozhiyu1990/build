@@ -121,15 +121,35 @@ class build {
         }
     }
     
-    func startBuild() {
+    func saveChangLog(_ log: String) {
+        guard let change = try? open(forWriting: configPath + "/change.log", overwrite: true) else { return }
+        change.write(log)
+        change.close()
+    }
+    
+    func readChangLog() -> String {
+        guard let change = try? String(contentsOfFile: configPath + "/change.log", encoding: .utf8) else {
+            return ""
+        }
+        return change
+    }
+    
+    func startBuild() {        
+        let changeLog = readChangLog()
+        
         do {
             run(bash: "cd \(configModel.productPath); git fetch origin")
             let branchsStr = run(bash: "cd \(configModel.productPath); git branch").stdout
             let branchs = branchsStr.components(separatedBy: "\n").filter { $0.hasPrefix("*") }
             if var branch = branchs.first {
                 branch = String(branch.suffix(from: branch.index(branch.startIndex, offsetBy: 2)))
-                let commitMsgsStr = run(bash: "cd \(configModel.productPath); git log \(branch)..origin/\(branch)").stdout
+                var commitMsgsStr = run(bash: "cd \(configModel.productPath); git log \(branch)..origin/\(branch)").stdout
+                if changeLog.count > 0 {
+                    commitMsgsStr = commitMsgsStr + "\n" + changeLog
+                }
+                
                 if commitMsgsStr.count > 0 {
+                    saveChangLog(commitMsgsStr)
                     commitMsgs = commitMsgsStr.components(separatedBy: "commit ").compactMap { item -> String? in
                         if item.count == 0 || item.contains("\nMerge: ") {
                             return nil
@@ -194,6 +214,7 @@ class build {
                 ipaUrl.deleteLastPathComponent()
                 ipaUrl.deleteLastPathComponent()
                 run(bash: "rm -r \(ipaUrl.path)")
+                run(bash: "rm \(configPath)/change.log")
                 do {
                     let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
                     if dingtalkWebhook.count > 0 {
