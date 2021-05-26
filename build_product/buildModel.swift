@@ -16,6 +16,7 @@ struct Model: Codable {
     var isHasPod: Bool?
     var provisioningProfiles: [Profile]?
     var _api_key: String
+    var dingtalkWebhook: String?
 }
 
 struct Profile: Codable {

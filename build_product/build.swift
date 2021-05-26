@@ -18,7 +18,6 @@ class build {
     var commitMsg: String = ""
     var commitMsgs: [String] = []
     var configModel: Model!
-    var dingtalkWebhook: String = ""
 
     class func arguments(_ arguments: [String]) {
         let builder = build(arguments: arguments)
@@ -217,7 +216,7 @@ class build {
                 run(bash: "rm \(configPath)/change.log")
                 do {
                     let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
-                    if dingtalkWebhook.count > 0 {
+                    if let dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
                         var text = ""
                         if commitMsgs.count > 0 {
                             text = """
@@ -253,7 +252,7 @@ class build {
             }
             do {
                 let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
-                if dingtalkWebhook.count > 0 {
+                if let dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
                     var text = ""
                     if commitMsgs.count > 0 {
                         text = """
@@ -326,15 +325,6 @@ class build {
             return item.trimmingCharacters(in: .whitespaces)
         }
         
-        for obj in configArr {
-            if obj.contains("dingtalkWebhook") {
-                if var last = obj.components(separatedBy: "=").last {
-                    last = last.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "*", with: " ")
-                    dingtalkWebhook = last.replacingOccurrences(of: "€", with: "=")
-                }
-                break
-            }
-        }
         configStr = configArr.joined(separator: "\n")
         
         configArr = configStr.components(separatedBy: "end")
@@ -440,10 +430,7 @@ class build {
         stream.write("""
             #!/usr/bin/ruby -w
             # 如果有多个项目，请写多个 product 'xxx' do ... end
-            
-            # 钉钉自定义机器人的Webhook地址，可用于向这个群发送消息
-            #dingtalkWebhook = ''
-            
+                        
             product 'xxx' do
                 # productPath\t\t\t\t 对应项目的路径
                 # productScheme\t\t\t\t 对应项目的Scheme
@@ -451,15 +438,18 @@ class build {
                 # teamID\t\t\t\t\t 对应的账号 teamID
                 # provisioningProfiles\t\t 如果要手动选择证书和配置文件的话，请填写此项
                 # _api_key\t\t\t\t\t 蒲公英api key
-
+                # dingtalkWebhook\t\t\t 钉钉自定义机器人的Webhook地址
+            
                 productPath = 'xxx'\t  # 必传项
                 #productScheme = 'xxx'\t  # productScheme默认为项目名, 如果您的productScheme和项目名不一致，请移除注释, 自行配置
                 productConfiguration = 'Release'\t  # 默认为 Release
                 teamID = 'xxx'\t  # 必传项
                 _api_key = 'xxx'\t  # 必传项
+                # 钉钉自定义机器人的Webhook地址，可用于向这个群发送消息
+                #dingtalkWebhook = 'xxx'
 
                 # 如果有多个target e.g. [(BundleId: 'bundleid1', profileName: 'name1'), (BundleId: 'bundleid2', profileName: 'name2')]
-                #provisioningProfiles = [(BundleId: 'xxx', profileName: 'xxx')]\t
+                #provisioningProfiles = [(BundleId: 'xxx', profileName: 'xxx')]
             end
             """)
         stream.close()
