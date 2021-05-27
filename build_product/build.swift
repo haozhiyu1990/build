@@ -163,7 +163,7 @@ class build {
                         return nil
                     }
                     commitMsg = commitMsgs.map({ $0.replacingOccurrences(of: "\n    ", with: "\n---- ")}).joined(separator: "\n")
-                    commitMsgs = commitMsgs.map { $0.replacingOccurrences(of: "\n    ", with: "<br/>\n> ")}
+                    commitMsgs = commitMsgs.map { $0.replacingOccurrences(of: "\n    ", with: "  \n> ")}
                 }
             }
             try runAndPrint(bash: "cd \(configModel.productPath); git pull")
@@ -225,7 +225,7 @@ class build {
                                 ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
                                 #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))<br/>
                                 #### 此版本更新了以下内容：<br/>
-                                \(commitMsgs.joined(separator: "\n"))
+                                \(commitMsgs.joined(separator: "  \n"))
                                 """
                         } else {
                             text = """
@@ -261,7 +261,7 @@ class build {
                             ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
                             #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))<br/>
                             #### 此版本更新了以下内容：<br/>
-                            \(commitMsgs.joined(separator: "\n"))
+                            \(commitMsgs.joined(separator: "  \n"))
                             """
                     } else {
                         text = """
