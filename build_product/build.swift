@@ -121,13 +121,13 @@ class build {
     }
     
     func saveChangLog(_ log: String) {
-        guard let change = try? open(forWriting: configPath + "/change.log", overwrite: true) else { return }
+        guard let change = try? open(forWriting: configPath + "/\(configModel.productName!)_change.log", overwrite: true) else { return }
         change.write(log)
         change.close()
     }
     
     func readChangLog() -> String {
-        guard let change = try? String(contentsOfFile: configPath + "/change.log", encoding: .utf8) else {
+        guard let change = try? String(contentsOfFile: configPath + "/\(configModel.productName!)_change.log", encoding: .utf8) else {
             return ""
         }
         return change
@@ -213,7 +213,7 @@ class build {
                 ipaUrl.deleteLastPathComponent()
                 ipaUrl.deleteLastPathComponent()
                 run(bash: "rm -r \(ipaUrl.path)")
-                run(bash: "rm \(configPath)/change.log")
+                run(bash: "rm \(configPath)/\(configModel.productName!)_change.log")
                 run(bash: "rm \(configPath)/ExportOptions.plist")
                 do {
                     let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
