@@ -35,3 +35,8 @@ struct IpaModelData: Codable {
     var buildShortcutUrl: String
     var buildQRCodeURL: String
 }
+
+struct DingDingModel: Codable {
+    var errcode: Int
+    var errmsg: String
+}

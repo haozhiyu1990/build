@@ -168,6 +168,7 @@ class build {
                     }
                     commitMsg = commitMsgs.map({ $0.replacingOccurrences(of: "\n    ", with: "\n---- ")}).joined(separator: "\n")
                     commitMsgs = commitMsgs.map { $0.replacingOccurrences(of: "\n    ", with: "  \n> ")}
+                    commitMsgs = commitMsgs.map { $0.replacingOccurrences(of: "\"", with: "'")}
                 }
             }
             try runAndPrint(bash: "cd \(configModel.productPath); git pull")
@@ -243,7 +244,20 @@ class build {
                                 #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
                                 """
                         }
-                        try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'")
+                        let result = run(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'").stdout
+                        guard let resultDate = result.data(using: .utf8) else {
+                            log.shared.red.line("钉钉机器人返回结果有误")
+                            log.shared.red.line(result)
+                            echoErrLog(err: "钉钉机器人返回结果有误")
+                            return
+                        }
+                        let dingdingModel = try JSONDecoder().decode(DingDingModel.self, from: resultDate)
+                        if dingdingModel.errcode != 0 {
+                            log.shared.red.line("钉钉机器人消息发送失败")
+                            log.shared.red.line(dingdingModel.errmsg)
+                            echoErrLog(err: "钉钉机器人消息发送失败")
+                            return
+                        }
                     }
                     run(bash: "rm \(configPath)/\(configModel.productName!)_change.log")
                     run(bash: "rm \(configPath)/\(configModel.productName!)_build_error.log")
@@ -283,7 +297,20 @@ class build {
                             #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
                             """
                     }
-                    try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'")
+                    let result = run(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'").stdout
+                    guard let resultDate = result.data(using: .utf8) else {
+                        log.shared.red.line("钉钉机器人返回结果有误")
+                        log.shared.red.line(result)
+                        echoErrLog(err: "钉钉机器人返回结果有误")
+                        return
+                    }
+                    let dingdingModel = try JSONDecoder().decode(DingDingModel.self, from: resultDate)
+                    if dingdingModel.errcode != 0 {
+                        log.shared.red.line("钉钉机器人消息发送失败")
+                        log.shared.red.line(dingdingModel.errmsg)
+                        echoErrLog(err: "钉钉机器人消息发送失败")
+                        return
+                    }
                 }
                 run(bash: "rm \(configPath)/\(configModel.productName!)_build_error.log")
             } catch let error as CommandError {
