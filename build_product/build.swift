@@ -69,11 +69,13 @@ class build {
                 
                 if contents.count == 0 || xcodeprojs.count == 0 {
                     log.shared.red.line("[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
+                    echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
                     run(bash: "open -R \(configPath)")
                     return
                 }
                 if xcodeprojs.count > 1 {
                     log.shared.red.line("[!] 配置文件 productPath 下有多个项目时，要填写具体项目路径，请前往\(configPath + "/buildConfig")查看")
+                    echoErrLog(err: "[!] 配置文件 productPath 下有多个项目时，要填写具体项目路径，请前往\(configPath + "/buildConfig")查看")
                     run(bash: "open -R \(configPath)")
                     return
                 }
@@ -95,6 +97,7 @@ class build {
                 configModel.productPath = productUrl.path
             default:
                 log.shared.red.line("[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
+                echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
                 run(bash: "open -R \(configPath)")
                 return
             }
@@ -102,6 +105,7 @@ class build {
         
         if configModel.productName == nil || configModel.productScheme == nil || configModel.isHasPod == nil {
             log.shared.red.line("[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
+            echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
             run(bash: "open -R \(configPath)")
             return
         }
@@ -173,8 +177,10 @@ class build {
             uploadFir()
         } catch let error as CommandError {
             log.shared.red.line(error.description)
+            echoErrLog(err: error.description)
         } catch {
             log.shared.red.line(error.localizedDescription)
+            echoErrLog(err: error.localizedDescription)
         }
     }
     
@@ -188,8 +194,10 @@ class build {
             uploadFir()
         } catch let error as CommandError {
             log.shared.red.line(error.description)
+            echoErrLog(err: error.description)
         } catch {
             log.shared.red.line(error.localizedDescription)
+            echoErrLog(err: error.localizedDescription)
         }
     }
     
@@ -208,15 +216,16 @@ class build {
                 guard let uploadFirData = uploadFirDataString.data(using: .utf8) else {
                     log.shared.red.line("蒲公英返回数据有误")
                     log.shared.red.line(uploadFirDataString)
+                    echoErrLog(err: "蒲公英返回数据有误")
                     return
                 }
                 ipaUrl.deleteLastPathComponent()
                 ipaUrl.deleteLastPathComponent()
                 run(bash: "rm -r \(ipaUrl.path)")
-                run(bash: "rm \(configPath)/\(configModel.productName!)_change.log")
                 run(bash: "rm \(configPath)/ExportOptions.plist")
                 do {
                     let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
+                    log.shared.green.line("上传蒲公英成功")
                     if let dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
                         var text = ""
                         if commitMsgs.count > 0 {
@@ -235,13 +244,15 @@ class build {
                                 """
                         }
                         try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'")
-                    } else {
-                        log.shared.green.line("上传蒲公英成功")
                     }
+                    run(bash: "rm \(configPath)/\(configModel.productName!)_change.log")
+                    run(bash: "rm \(configPath)/\(configModel.productName!)_build_error.log")
                 } catch let error as CommandError {
                     log.shared.red.line(error.description)
+                    echoErrLog(err: error.description)
                 } catch {
                     log.shared.red.line(error.localizedDescription)
+                    echoErrLog(err: error.localizedDescription)
                 }
             }
         } else {
@@ -249,10 +260,12 @@ class build {
             guard let uploadFirData = uploadFirDataString.data(using: .utf8) else {
                 log.shared.red.line("蒲公英返回数据有误")
                 log.shared.red.line(uploadFirDataString)
+                echoErrLog(err: "蒲公英返回数据有误")
                 return
             }
             do {
                 let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
+                log.shared.green.line("上传蒲公英成功")
                 if let dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
                     var text = ""
                     if commitMsgs.count > 0 {
@@ -271,13 +284,14 @@ class build {
                             """
                     }
                     try runAndPrint(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'")
-                } else {
-                    log.shared.green.line("上传蒲公英成功")
                 }
+                run(bash: "rm \(configPath)/\(configModel.productName!)_build_error.log")
             } catch let error as CommandError {
                 log.shared.red.line(error.description)
+                echoErrLog(err: error.description)
             } catch {
                 log.shared.red.line(error.localizedDescription)
+                echoErrLog(err: error.localizedDescription)
             }
         }
     }
@@ -332,6 +346,7 @@ class build {
         configArr = configArr.filter { $0.contains("product \(buildName) do") }
         if configArr.count != 1 {
             log.shared.red.line("[!] 配置文件有误，请前往\(configPath + "/buildConfig")查看")
+            echoErrLog(err: "[!] 配置文件有误，请前往\(configPath + "/buildConfig")查看")
             run(bash: "open -R \(configPath)")
             return
         }
@@ -407,6 +422,7 @@ class build {
         let jsonData = Dictionary(uniqueKeysWithValues: zip(keys, values)).jsonData()
         guard let model = try? JSONDecoder().decode(Model.self, from: jsonData) else {
             log.shared.red.line("[!] 配置文件有误，请前往\(configPath + "/buildConfig")查看")
+            echoErrLog(err: "[!] 配置文件有误，请前往\(configPath + "/buildConfig")查看")
             run(bash: "open -R \(configPath)")
             return
         }
@@ -537,6 +553,7 @@ class build {
             if Files.fileExists(atPath: configPath + "/buildConfig") {
                 guard let config = try? String(contentsOfFile: configPath + "/buildConfig", encoding: .utf8) else {
                     log.shared.red.line("[!] 请选运行 init ")
+                    help()
                     return
                 }
                 
@@ -565,6 +582,7 @@ class build {
                 }
             } else {
                 log.shared.red.line("[!] 请选运行 init ")
+                help()
             }
         case "--help":
             help()
@@ -572,6 +590,7 @@ class build {
             log.shared.red.word("[!] Unknown command（找不到命令）: `\(command)` 尝试使用 ")
             log.shared.word("$ ")
             log.shared.green.line("build --help")
+            echoErrLog(err: "[!] Unknown command（找不到命令）: `\(command)` 尝试使用 $ build --help")
         }
     }
     
@@ -622,5 +641,13 @@ class build {
         log.shared.blue.word("\t--help")
         log.shared.line("\t显示帮助文档")
         log.shared.line("")
+        
+        echoErrLog(err: "1、请检查buildConfig是否正确？\n2、所用命令是否正确？")
+    }
+    
+    func echoErrLog(err: String) {
+        guard let stream = try? open(forWriting: configPath + "/\(configModel.productName!)_build_error.log", overwrite: true) else { return }
+        stream.write(err)
+        stream.close()
     }
 }
