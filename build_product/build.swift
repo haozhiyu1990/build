@@ -13,6 +13,8 @@ class build {
     var configPath: String = ""
     var checkoutPath: String = ""
     var archivePath: String = ""
+    var changedLogPath: String = ""
+    var buildErrLogPath: String = ""
     var ipaPath: String = ""
     var buildName: String = ""
     var commitMsg: String = ""
@@ -61,7 +63,12 @@ class build {
                 configModel.productPath = productUrl.path
                 configModel.isHasPod = true
             case "":
-                let contents = try! Files.contentsOfDirectory(atPath: productUrl.path)
+                guard let contents = try? Files.contentsOfDirectory(atPath: productUrl.path) else {
+                    log.shared.red.line("[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
+                    echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
+                    run(bash: "open -R \(configPath)")
+                    return
+                }
                 
                 var xcodeprojs = contents.filter { $0.hasSuffix(".xcodeproj") }
                 xcodeprojs = xcodeprojs.filter { $0 != "Pods.xcodeproj" }
@@ -125,19 +132,21 @@ class build {
     }
     
     func saveChangLog(_ log: String) {
-        guard let change = try? open(forWriting: configPath + "/\(configModel.productName!)_change.log", overwrite: true) else { return }
+        guard let change = try? open(forWriting: changedLogPath, overwrite: true) else { return }
         change.write(log)
         change.close()
     }
     
     func readChangLog() -> String {
-        guard let change = try? String(contentsOfFile: configPath + "/\(configModel.productName!)_change.log", encoding: .utf8) else {
+        guard let change = try? String(contentsOfFile: changedLogPath, encoding: .utf8) else {
             return ""
         }
         return change
     }
     
-    func startBuild() {        
+    func startBuild() {
+        changedLogPath = configPath + "/\(configModel.productName!)_change.log"
+        buildErrLogPath = configPath + "/\(configModel.productName!)_build_error.log"
         let changeLog = readChangLog()
         
         do {
@@ -222,8 +231,12 @@ class build {
                 }
                 ipaUrl.deleteLastPathComponent()
                 ipaUrl.deleteLastPathComponent()
-                run(bash: "rm -r \(ipaUrl.path)")
-                run(bash: "rm \(configPath)/ExportOptions.plist")
+                if Files.fileExists(atPath: ipaUrl.path) {
+                    run(bash: "rm -r \(ipaUrl.path)")
+                }
+                if Files.fileExists(atPath: "\(configPath)/ExportOptions.plist") {
+                    run(bash: "rm \(configPath)/ExportOptions.plist")
+                }
                 do {
                     let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
                     log.shared.green.line("上传蒲公英成功")
@@ -259,8 +272,12 @@ class build {
                             return
                         }
                     }
-                    run(bash: "rm \(configPath)/\(configModel.productName!)_change.log")
-                    run(bash: "rm \(configPath)/\(configModel.productName!)_build_error.log")
+                    if Files.fileExists(atPath: changedLogPath) {
+                        run(bash: "rm \(changedLogPath)")
+                    }
+                    if Files.fileExists(atPath: buildErrLogPath) {
+                        run(bash: "rm \(buildErrLogPath)")
+                    }
                 } catch let error as CommandError {
                     log.shared.red.line(error.description)
                     echoErrLog(err: error.description)
@@ -312,7 +329,9 @@ class build {
                         return
                     }
                 }
-                run(bash: "rm \(configPath)/\(configModel.productName!)_build_error.log")
+                if Files.fileExists(atPath: buildErrLogPath) {                
+                    run(bash: "rm \(buildErrLogPath)")
+                }
             } catch let error as CommandError {
                 log.shared.red.line(error.description)
                 echoErrLog(err: error.description)
@@ -673,7 +692,7 @@ class build {
     }
     
     func echoErrLog(err: String) {
-        guard let stream = try? open(forWriting: configPath + "/\(configModel.productName!)_build_error.log", overwrite: true) else { return }
+        guard let stream = try? open(forWriting: buildErrLogPath, overwrite: true) else { return }
         stream.write(err)
         stream.close()
     }
