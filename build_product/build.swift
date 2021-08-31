@@ -117,6 +117,14 @@ class build {
             return
         }
         
+        if configModel.signingMethod == nil {
+            configModel.signingMethod = "development"
+        }
+        
+        if configModel.productConfiguration == nil {
+            configModel.productConfiguration = "Release"
+        }
+        
         checkoutPath = configModel.productPath + "/autoBuild/\(Date().toString)"
         creatExortConfig()
         
@@ -182,7 +190,7 @@ class build {
             }
             try runAndPrint(bash: "cd \(configModel.productPath); git pull")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild clean")
-            try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild archive -\(configModel.isHasPod! ? "workspace" : "project") \(configModel.productName!).\(configModel.isHasPod! ? "xcworkspace" : "xcodeproj") -scheme \(configModel.productScheme!) -configuration \(configModel.productConfiguration) -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive")
+            try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild archive -\(configModel.isHasPod! ? "workspace" : "project") \(configModel.productName!).\(configModel.isHasPod! ? "xcworkspace" : "xcodeproj") -scheme \(configModel.productScheme!) -configuration \(configModel.productConfiguration!) -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild -exportArchive -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive -exportPath \(checkoutPath) -exportOptionsPlist \(configPath)/ExportOptions.plist")
             uploadFir()
         } catch let error as CommandError {
@@ -499,14 +507,16 @@ class build {
                 # productScheme\t\t\t\t 对应项目的Scheme
                 # productConfiguration\t\t 对应项目的 configuration  分别为 Release 和  Debug
                 # teamID\t\t\t\t\t 对应的账号 teamID
+                # signingMethod\t\t\t\t 对应的签名方法 ad-hoc development app-store
                 # provisioningProfiles\t\t 如果要手动选择证书和配置文件的话，请填写此项
                 # _api_key\t\t\t\t\t 蒲公英api key
                 # dingtalkWebhook\t\t\t 钉钉自定义机器人的Webhook地址
             
                 productPath = 'xxx'\t  # 必传项
                 #productScheme = 'xxx'\t  # productScheme默认为项目名, 如果您的productScheme和项目名不一致，请移除注释, 自行配置
-                productConfiguration = 'Release'\t  # 默认为 Release
+                #productConfiguration = 'Debug'\t  # 默认为 Release
                 teamID = 'xxx'\t  # 必传项
+                #signingMethod = 'ad-hoc'    # 默认为  development
                 _api_key = 'xxx'\t  # 必传项
                 # 钉钉自定义机器人的Webhook地址，可用于向这个群发送消息
                 #dingtalkWebhook = 'xxx'
@@ -538,7 +548,7 @@ class build {
                     <key>destination</key>
                     <string>export</string>
                     <key>method</key>
-                    <string>development</string>
+                    <string>\(configModel.signingMethod!)</string>
                     <key>provisioningProfiles</key>
                     <dict>
                         \(profilesStr)
@@ -564,7 +574,7 @@ class build {
                     <key>destination</key>
                     <string>export</string>
                     <key>method</key>
-                    <string>development</string>
+                    <string>\(configModel.signingMethod!)</string>
                     <key>signingStyle</key>
                     <string>automatic</string>
                     <key>stripSwiftSymbols</key>

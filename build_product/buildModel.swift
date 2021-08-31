@@ -11,8 +11,9 @@ struct Model: Codable {
     var productPath: String
     var teamID: String
     var productScheme: String?
+    var signingMethod: String?
     var productName: String?
-    var productConfiguration: String
+    var productConfiguration: String?
     var isHasPod: Bool?
     var provisioningProfiles: [Profile]?
     var _api_key: String
