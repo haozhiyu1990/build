@@ -165,7 +165,10 @@ class build {
                 branch = String(branch.suffix(from: branch.index(branch.startIndex, offsetBy: 2)))
                 var commitMsgsStr = run(bash: "cd \(configModel.productPath); git log \(branch)..origin/\(branch)").stdout
                 if changeLog.count > 0 {
-                    commitMsgsStr = commitMsgsStr + "\n" + changeLog
+                    if commitMsgsStr.count > 0 {
+                        commitMsgsStr = commitMsgsStr + "\n"
+                    }
+                    commitMsgsStr = commitMsgsStr + changeLog
                 }
                 
                 if commitMsgsStr.count > 0 {
@@ -178,7 +181,7 @@ class build {
                     }
                     commitMsgs = commitMsgs.reversed().enumerated().compactMap { (index, item) -> String? in
                         let msgs = item.components(separatedBy: "\n\n")
-                        if msgs.count > 1 {
+                        if msgs.count > 1, msgs[1].trimmingCharacters(in: .whitespacesAndNewlines).count > 0 {
                             return "\(index+1). "+msgs[1].trimmingCharacters(in: .whitespacesAndNewlines)
                         }
                         return nil
