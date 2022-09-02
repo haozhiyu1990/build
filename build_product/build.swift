@@ -244,7 +244,7 @@ class build {
     }
     
     func uploadFir(buildDir: URL? = nil, path: String) {
-        let tokenJson = run(bash: "curl -d '_api_key=\(configModel._api_key)&buildType=ios&buildInstallDate=2' https://www.pgyer.com/apiv2/app/getCOSToken").stdout
+        let tokenJson = run(bash: "curl -d '_api_key=\(configModel._api_key)&buildUpdateDescription=\(commitMsg)&buildType=ios&buildInstallDate=2' https://www.pgyer.com/apiv2/app/getCOSToken").stdout
         guard let tokenData = tokenJson.data(using: .utf8) else {
             log.shared.red.line("获取蒲公英上传token失败")
             log.shared.red.line(tokenJson)
