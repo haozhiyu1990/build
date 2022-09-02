@@ -25,8 +25,34 @@ struct Profile: Codable {
     var BundleId: String
 }
 
+struct PgyerTokenResult: Codable {
+    var code: Int
+    var message: String
+    var data: PgyerToken
+}
+
+struct PgyerToken: Codable {
+    var key: String
+    var endpoint: String
+    var params: PgyerUploadParam
+}
+
+struct PgyerUploadParam: Codable {
+    var signature: String
+    var securityToken: String
+    var key: String
+    
+    enum CodingKeys: String, CodingKey {
+        case signature
+        case securityToken = "x-cos-security-token"
+        case key
+    }
+}
+
 struct IpaModel: Codable {
-    var data: IpaModelData
+    var code: Int
+    var message: String
+    var data: IpaModelData?
 }
 
 struct IpaModelData: Codable {

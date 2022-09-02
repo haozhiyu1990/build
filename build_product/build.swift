@@ -232,124 +232,131 @@ class build {
                     return
                 }
                 ipaUrl.appendPathComponent(ipas.first!)
-                
-                let uploadFirDataString = run(bash: "curl -F 'file=@\(ipaUrl.path)' -F '_api_key=\(configModel._api_key)' -F 'buildUpdateDescription=\(commitMsg)' https://www.pgyer.com/apiv2/app/upload").stdout
-                guard let uploadFirData = uploadFirDataString.data(using: .utf8) else {
-                    log.shared.red.line("蒲公英返回数据有误")
-                    log.shared.red.line(uploadFirDataString)
-                    echoErrLog(err: "蒲公英返回数据有误")
+                let ipaPath = ipaUrl.path
+                ipaUrl.deleteLastPathComponent()
+                ipaUrl.deleteLastPathComponent()
+
+                uploadFir(buildDir: ipaUrl, path: ipaPath)
+            }
+        } else {
+            uploadFir(path: ipaPath)
+        }
+    }
+    
+    func uploadFir(buildDir: URL? = nil, path: String) {
+        let tokenJson = run(bash: "curl -d '_api_key=\(configModel._api_key)&buildType=ios&buildInstallDate=2' https://www.pgyer.com/apiv2/app/getCOSToken").stdout
+        guard let tokenData = tokenJson.data(using: .utf8) else {
+            log.shared.red.line("获取蒲公英上传token失败")
+            log.shared.red.line(tokenJson)
+            echoErrLog(err: "获取蒲公英上传token失败")
+            return
+        }
+        do {
+            let pgyerTokenResult = try JSONDecoder().decode(PgyerTokenResult.self, from: tokenData)
+            if pgyerTokenResult.code != 0 {
+                log.shared.red.line("蒲公英上传token有误")
+                log.shared.red.line(pgyerTokenResult.message)
+                echoErrLog(err: "蒲公英上传token有误")
+                return
+            }
+            try runAndPrint(bash: "curl -D - --form-string 'key=\(pgyerTokenResult.data.params.key)' --form-string 'signature=\(pgyerTokenResult.data.params.signature)' --form-string 'x-cos-security-token=\(pgyerTokenResult.data.params.securityToken)' -F 'file=@\(path)' \(pgyerTokenResult.data.endpoint)")
+            //  wait ...  在这一步中上传 App 成功后，App 会自动进入服务器后台队列继续后续的发布流程。所以，在这一步中 App 上传完成后，并不代表 App 已经完成发布。一般来说，一般1分钟以内就能完成发布。要检查是否发布完成，请调用下一步中的 API。
+            
+            let getBuildInfoCall: () -> IpaModel? = { [unowned self] in
+                while true {
+                    sleep(5)
+                    
+                    let buildInfoJsonString = run(bash: "curl -X GET -G --data-urlencode '_api_key=\(self.configModel._api_key)' --data-urlencode 'buildKey=\(pgyerTokenResult.data.key)' https://www.pgyer.com/apiv2/app/buildInfo").stdout
+                    guard let buildInfoData = buildInfoJsonString.data(using: .utf8) else {
+                        log.shared.red.line("蒲公英返回数据有误")
+                        log.shared.red.line(buildInfoJsonString)
+                        echoErrLog(err: "蒲公英返回数据有误")
+                        return nil
+                    }
+                    do {
+                        let ipaModel = try JSONDecoder().decode(IpaModel.self, from: buildInfoData)
+                        if ipaModel.code == 1216 {
+                            log.shared.red.line("错误码，1216 应用发布失败")
+                            log.shared.red.line(ipaModel.message)
+                            echoErrLog(err: "错误码，1216 应用发布失败")
+                            return nil
+                        }
+                        if ipaModel.code == 0 {
+                            return ipaModel
+                        }
+                    } catch {
+                        log.shared.red.line(error.localizedDescription)
+                        echoErrLog(err: error.localizedDescription)
+                        return nil
+                    }
+                }
+            }
+            
+            let ipaModel = getBuildInfoCall()
+            guard let ipaModel = ipaModel else {
+                return
+            }
+            guard let ipaModelData = ipaModel.data else {
+                log.shared.red.line("蒲公英返回数据为空")
+                echoErrLog(err: "蒲公英返回数据为空")
+                return
+            }
+
+            log.shared.green.line("上传蒲公英成功")
+            if let dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
+                var text = ""
+                if commitMsgs.count > 0 {
+                    text = """
+                        ### 工作通知<br/>
+                        ![二维码](\(ipaModelData.buildQRCodeURL))<br/>
+                        #### \(ipaModelData.buildName) iOS \(ipaModelData.buildVersion)(build \(ipaModelData.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModelData.buildShortcutUrl))<br/>
+                        #### 此版本更新了以下内容：<br/>
+                        \(commitMsgs.joined(separator: "  \n"))
+                        """
+                } else {
+                    text = """
+                        ### 工作通知<br/>
+                        ![二维码](\(ipaModelData.buildQRCodeURL))<br/>
+                        #### \(ipaModelData.buildName) iOS \(ipaModelData.buildVersion)(build \(ipaModelData.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModelData.buildShortcutUrl))
+                        """
+                }
+                let result = run(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'").stdout
+                guard let resultDate = result.data(using: .utf8) else {
+                    log.shared.red.line("钉钉机器人返回结果有误")
+                    log.shared.red.line(result)
+                    echoErrLog(err: "钉钉机器人返回结果有误")
                     return
                 }
-                ipaUrl.deleteLastPathComponent()
-                ipaUrl.deleteLastPathComponent()
-                if Files.fileExists(atPath: ipaUrl.path) {
-                    run(bash: "rm -r \(ipaUrl.path)")
+                let dingdingModel = try JSONDecoder().decode(DingDingModel.self, from: resultDate)
+                if dingdingModel.errcode != 0 {
+                    log.shared.red.line("钉钉机器人消息发送失败")
+                    log.shared.red.line(dingdingModel.errmsg)
+                    echoErrLog(err: "钉钉机器人消息发送失败")
+                    return
                 }
+            }
+            if let buildDir = buildDir {
+                if Files.fileExists(atPath: buildDir.path) {
+                    run(bash: "rm -r \(buildDir.path)")
+                }
+            }
+            if ipaPath.count == 0 {
                 if Files.fileExists(atPath: "\(configPath)/ExportOptions.plist") {
                     run(bash: "rm \(configPath)/ExportOptions.plist")
                 }
-                do {
-                    let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
-                    log.shared.green.line("上传蒲公英成功")
-                    if let dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
-                        var text = ""
-                        if commitMsgs.count > 0 {
-                            text = """
-                                ### 工作通知<br/>
-                                ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
-                                #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))<br/>
-                                #### 此版本更新了以下内容：<br/>
-                                \(commitMsgs.joined(separator: "  \n"))
-                                """
-                        } else {
-                            text = """
-                                ### 工作通知<br/>
-                                ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
-                                #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
-                                """
-                        }
-                        let result = run(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'").stdout
-                        guard let resultDate = result.data(using: .utf8) else {
-                            log.shared.red.line("钉钉机器人返回结果有误")
-                            log.shared.red.line(result)
-                            echoErrLog(err: "钉钉机器人返回结果有误")
-                            return
-                        }
-                        let dingdingModel = try JSONDecoder().decode(DingDingModel.self, from: resultDate)
-                        if dingdingModel.errcode != 0 {
-                            log.shared.red.line("钉钉机器人消息发送失败")
-                            log.shared.red.line(dingdingModel.errmsg)
-                            echoErrLog(err: "钉钉机器人消息发送失败")
-                            return
-                        }
-                    }
-                    if Files.fileExists(atPath: changedLogPath) {
-                        run(bash: "rm \(changedLogPath)")
-                    }
-                    if Files.fileExists(atPath: buildErrLogPath) {
-                        run(bash: "rm \(buildErrLogPath)")
-                    }
-                } catch let error as CommandError {
-                    log.shared.red.line(error.description)
-                    echoErrLog(err: error.description)
-                } catch {
-                    log.shared.red.line(error.localizedDescription)
-                    echoErrLog(err: error.localizedDescription)
+                if Files.fileExists(atPath: changedLogPath) {
+                    run(bash: "rm \(changedLogPath)")
                 }
             }
-        } else {
-            let uploadFirDataString = run(bash: "curl -F 'file=@\(ipaPath)' -F '_api_key=\(configModel._api_key)' -F 'buildUpdateDescription=\(commitMsg)' https://www.pgyer.com/apiv2/app/upload").stdout
-            guard let uploadFirData = uploadFirDataString.data(using: .utf8) else {
-                log.shared.red.line("蒲公英返回数据有误")
-                log.shared.red.line(uploadFirDataString)
-                echoErrLog(err: "蒲公英返回数据有误")
-                return
+            if Files.fileExists(atPath: buildErrLogPath) {
+                run(bash: "rm \(buildErrLogPath)")
             }
-            do {
-                let ipaModel = try JSONDecoder().decode(IpaModel.self, from: uploadFirData)
-                log.shared.green.line("上传蒲公英成功")
-                if let dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
-                    var text = ""
-                    if commitMsgs.count > 0 {
-                        text = """
-                            ### 工作通知<br/>
-                            ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
-                            #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))<br/>
-                            #### 此版本更新了以下内容：<br/>
-                            \(commitMsgs.joined(separator: "  \n"))
-                            """
-                    } else {
-                        text = """
-                            ### 工作通知<br/>
-                            ![二维码](\(ipaModel.data.buildQRCodeURL))<br/>
-                            #### \(ipaModel.data.buildName) iOS \(ipaModel.data.buildVersion)(build \(ipaModel.data.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModel.data.buildShortcutUrl))
-                            """
-                    }
-                    let result = run(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'").stdout
-                    guard let resultDate = result.data(using: .utf8) else {
-                        log.shared.red.line("钉钉机器人返回结果有误")
-                        log.shared.red.line(result)
-                        echoErrLog(err: "钉钉机器人返回结果有误")
-                        return
-                    }
-                    let dingdingModel = try JSONDecoder().decode(DingDingModel.self, from: resultDate)
-                    if dingdingModel.errcode != 0 {
-                        log.shared.red.line("钉钉机器人消息发送失败")
-                        log.shared.red.line(dingdingModel.errmsg)
-                        echoErrLog(err: "钉钉机器人消息发送失败")
-                        return
-                    }
-                }
-                if Files.fileExists(atPath: buildErrLogPath) {                
-                    run(bash: "rm \(buildErrLogPath)")
-                }
-            } catch let error as CommandError {
-                log.shared.red.line(error.description)
-                echoErrLog(err: error.description)
-            } catch {
-                log.shared.red.line(error.localizedDescription)
-                echoErrLog(err: error.localizedDescription)
-            }
+        } catch let error as CommandError {
+            log.shared.red.line(error.description)
+            echoErrLog(err: error.description)
+        } catch {
+            log.shared.red.line(error.localizedDescription)
+            echoErrLog(err: error.localizedDescription)
         }
     }
     
