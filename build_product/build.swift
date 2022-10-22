@@ -158,7 +158,7 @@ class build {
         let changeLog = readChangLog()
         
         do {
-            run(bash: "cd \(configModel.productPath); git fetch origin")
+            try runAndPrint(bash: "cd \(configModel.productPath); git fetch origin")
             let branchsStr = run(bash: "cd \(configModel.productPath); git branch").stdout
             let branchs = branchsStr.components(separatedBy: "\n").filter { $0.hasPrefix("*") }
             if var branch = branchs.first {
@@ -192,6 +192,11 @@ class build {
                 }
             }
             try runAndPrint(bash: "cd \(configModel.productPath); git pull")
+            if let hasPod = configModel.isHasPod, hasPod {
+                run(bash: "cd \(configModel.productPath); rm Podfile.lock")
+                run(bash: "cd \(configModel.productPath); rm -rf Pods")
+                try runAndPrint(bash: "cd \(configModel.productPath); pod install")
+            }
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild clean")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild archive -\(configModel.isHasPod! ? "workspace" : "project") \(configModel.productName!).\(configModel.isHasPod! ? "xcworkspace" : "xcodeproj") -scheme \(configModel.productScheme!) -configuration \(configModel.productConfiguration!) -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive")
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild -exportArchive -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive -exportPath \(checkoutPath) -exportOptionsPlist \(configPath)/ExportOptions.plist")
@@ -337,7 +342,7 @@ class build {
             }
             if let buildDir = buildDir {
                 if Files.fileExists(atPath: buildDir.path) {
-                    run(bash: "rm -r \(buildDir.path)")
+                    run(bash: "rm -rf \(buildDir.path)")
                 }
             }
             if ipaPath.count == 0 {
