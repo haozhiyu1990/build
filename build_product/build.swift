@@ -8,6 +8,8 @@
 import Foundation
 
 class build {
+    static let currentVersion = "1.3.6"
+    
     var arguments: [String]
     var workingSpace: String = ""
     var configPath: String = ""
@@ -657,6 +659,8 @@ class build {
             }
         case "--help":
             help()
+        case "--version":
+            print(build.currentVersion)
         default:
             log.shared.red.word("[!] Unknown command（找不到命令）: `\(command)` 尝试使用 ")
             log.shared.word("$ ")
@@ -710,7 +714,9 @@ class build {
         log.shared.underline.line("Options:")
         log.shared.line("")
         log.shared.blue.word("\t--help")
-        log.shared.line("\t显示帮助文档")
+        log.shared.line("\t\t显示帮助文档")
+        log.shared.blue.word("\t--version")
+        log.shared.line("\t显示当前版本号")
         log.shared.line("")
         
         echoErrLog(err: "1、请检查buildConfig是否正确？\n2、所用命令是否正确？")
