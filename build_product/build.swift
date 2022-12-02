@@ -8,7 +8,7 @@
 import Foundation
 
 class build {
-    static let currentVersion = "1.3.6"
+    static let currentVersion = "1.3.7"
     
     var arguments: [String]
     var workingSpace: String = ""
@@ -187,6 +187,27 @@ class build {
                             return "\(index+1). "+msgs[1].trimmingCharacters(in: .whitespacesAndNewlines)
                         }
                         return nil
+                    }
+                    var first = true
+                    commitMsgs = commitMsgs.map {
+                        var subCommitMsgs = $0.components(separatedBy: "\n    ")
+                        if subCommitMsgs.count > 1 {
+                            subCommitMsgs = subCommitMsgs.compactMap { item -> String? in
+                                if item.trimmingCharacters(in: .whitespacesAndNewlines).count > 0 {
+                                    return item.trimmingCharacters(in: .whitespacesAndNewlines)
+                                }
+                                return nil
+                            }
+                            subCommitMsgs = subCommitMsgs.enumerated().map { (idx, item) -> String in
+                                if first {
+                                    first.toggle()
+                                    return item
+                                }
+                                return String(Unicode.Scalar(UInt8(96+idx)))+". "+item
+                            }
+                            return subCommitMsgs.joined(separator: "\n    ")
+                        }
+                        return $0
                     }
                     commitMsg = commitMsgs.map({ $0.replacingOccurrences(of: "\n    ", with: "\n---- ")}).joined(separator: "\n")
                     commitMsgs = commitMsgs.map { $0.replacingOccurrences(of: "\n    ", with: "  \n> ")}
