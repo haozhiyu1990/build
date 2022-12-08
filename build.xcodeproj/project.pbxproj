@@ -3,25 +3,18 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		C45CD0BC262FCF51005555EC /* buildModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45CD0BB262FCF50005555EC /* buildModel.swift */; };
-		C4829C8526241B2A00748574 /* JSONKit.m in Sources */ = {isa = PBXBuildFile; fileRef = C4829C7F26241B2A00748574 /* JSONKit.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		C4616E67294096B500FE7E2B /* SwiftShell in Frameworks */ = {isa = PBXBuildFile; productRef = C4616E66294096B500FE7E2B /* SwiftShell */; };
+		C4616E6A294096F600FE7E2B /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C4616E69294096F600FE7E2B /* CryptoSwift */; };
+		C4616E6D2940976900FE7E2B /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = C4616E6C2940976900FE7E2B /* SwiftyJSON */; };
 		C4829C8726241B2A00748574 /* toolEx.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4829C8126241B2A00748574 /* toolEx.swift */; };
 		C4829C8D26241FA200748574 /* log.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4829C8C26241FA200748574 /* log.swift */; };
 		C4829C922624209300748574 /* build.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4829C912624209300748574 /* build.swift */; };
 		C493D2BA262137F800430150 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C493D2B9262137F800430150 /* main.swift */; };
-		C4945E91262D7EBA0063E678 /* Bash.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4945E86262D7EBA0063E678 /* Bash.swift */; };
-		C4945E92262D7EBA0063E678 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4945E87262D7EBA0063E678 /* Process.swift */; };
-		C4945E93262D7EBA0063E678 /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4945E89262D7EBA0063E678 /* Array.swift */; };
-		C4945E94262D7EBA0063E678 /* Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4945E8B262D7EBA0063E678 /* Stream.swift */; };
-		C4945E95262D7EBA0063E678 /* Lazy-split.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4945E8C262D7EBA0063E678 /* Lazy-split.swift */; };
-		C4945E96262D7EBA0063E678 /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4945E8D262D7EBA0063E678 /* Files.swift */; };
-		C4945E97262D7EBA0063E678 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4945E8E262D7EBA0063E678 /* Command.swift */; };
-		C4945E98262D7EBA0063E678 /* Context.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4945E8F262D7EBA0063E678 /* Context.swift */; };
-		C4945E99262D7EBA0063E678 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4945E90262D7EBA0063E678 /* String.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -38,23 +31,11 @@
 
 /* Begin PBXFileReference section */
 		C45CD0BB262FCF50005555EC /* buildModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = buildModel.swift; sourceTree = "<group>"; };
-		C4829C7F26241B2A00748574 /* JSONKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSONKit.m; sourceTree = "<group>"; };
 		C4829C8126241B2A00748574 /* toolEx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = toolEx.swift; sourceTree = "<group>"; };
-		C4829C8226241B2A00748574 /* JSONKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSONKit.h; sourceTree = "<group>"; };
-		C4829C8326241B2A00748574 /* build-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "build-Bridging-Header.h"; sourceTree = "<group>"; };
 		C4829C8C26241FA200748574 /* log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = log.swift; sourceTree = "<group>"; };
 		C4829C912624209300748574 /* build.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = build.swift; sourceTree = "<group>"; };
 		C493D2B6262137F800430150 /* build */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = build; sourceTree = BUILT_PRODUCTS_DIR; };
 		C493D2B9262137F800430150 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		C4945E86262D7EBA0063E678 /* Bash.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bash.swift; sourceTree = "<group>"; };
-		C4945E87262D7EBA0063E678 /* Process.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Process.swift; sourceTree = "<group>"; };
-		C4945E89262D7EBA0063E678 /* Array.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Array.swift; sourceTree = "<group>"; };
-		C4945E8B262D7EBA0063E678 /* Stream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stream.swift; sourceTree = "<group>"; };
-		C4945E8C262D7EBA0063E678 /* Lazy-split.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Lazy-split.swift"; sourceTree = "<group>"; };
-		C4945E8D262D7EBA0063E678 /* Files.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Files.swift; sourceTree = "<group>"; };
-		C4945E8E262D7EBA0063E678 /* Command.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
-		C4945E8F262D7EBA0063E678 /* Context.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Context.swift; sourceTree = "<group>"; };
-		C4945E90262D7EBA0063E678 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,29 +43,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C4616E6D2940976900FE7E2B /* SwiftyJSON in Frameworks */,
+				C4616E67294096B500FE7E2B /* SwiftShell in Frameworks */,
+				C4616E6A294096F600FE7E2B /* CryptoSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C4829C6F26241B0C00748574 /* tools */ = {
-			isa = PBXGroup;
-			children = (
-				C4945E85262D7EBA0063E678 /* SwiftShell */,
-				C4829C8226241B2A00748574 /* JSONKit.h */,
-				C4829C7F26241B2A00748574 /* JSONKit.m */,
-				C4829C8126241B2A00748574 /* toolEx.swift */,
-				C4829C8326241B2A00748574 /* build-Bridging-Header.h */,
-			);
-			path = tools;
-			sourceTree = "<group>";
-		};
 		C493D2AD262137F800430150 = {
 			isa = PBXGroup;
 			children = (
 				C493D2B8262137F800430150 /* build_product */,
-				C4829C6F26241B0C00748574 /* tools */,
 				C493D2B7262137F800430150 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -104,40 +75,9 @@
 				C4829C912624209300748574 /* build.swift */,
 				C493D2B9262137F800430150 /* main.swift */,
 				C45CD0BB262FCF50005555EC /* buildModel.swift */,
+				C4829C8126241B2A00748574 /* toolEx.swift */,
 			);
 			path = build_product;
-			sourceTree = "<group>";
-		};
-		C4945E85262D7EBA0063E678 /* SwiftShell */ = {
-			isa = PBXGroup;
-			children = (
-				C4945E86262D7EBA0063E678 /* Bash.swift */,
-				C4945E87262D7EBA0063E678 /* Process.swift */,
-				C4945E88262D7EBA0063E678 /* General */,
-				C4945E8A262D7EBA0063E678 /* Stream */,
-				C4945E8D262D7EBA0063E678 /* Files.swift */,
-				C4945E8E262D7EBA0063E678 /* Command.swift */,
-				C4945E8F262D7EBA0063E678 /* Context.swift */,
-				C4945E90262D7EBA0063E678 /* String.swift */,
-			);
-			path = SwiftShell;
-			sourceTree = "<group>";
-		};
-		C4945E88262D7EBA0063E678 /* General */ = {
-			isa = PBXGroup;
-			children = (
-				C4945E89262D7EBA0063E678 /* Array.swift */,
-			);
-			path = General;
-			sourceTree = "<group>";
-		};
-		C4945E8A262D7EBA0063E678 /* Stream */ = {
-			isa = PBXGroup;
-			children = (
-				C4945E8B262D7EBA0063E678 /* Stream.swift */,
-				C4945E8C262D7EBA0063E678 /* Lazy-split.swift */,
-			);
-			path = Stream;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -156,6 +96,11 @@
 			dependencies = (
 			);
 			name = build;
+			packageProductDependencies = (
+				C4616E66294096B500FE7E2B /* SwiftShell */,
+				C4616E69294096F600FE7E2B /* CryptoSwift */,
+				C4616E6C2940976900FE7E2B /* SwiftyJSON */,
+			);
 			productName = build;
 			productReference = C493D2B6262137F800430150 /* build */;
 			productType = "com.apple.product-type.tool";
@@ -167,7 +112,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1240;
-				LastUpgradeCheck = 1250;
+				LastUpgradeCheck = 1410;
 				TargetAttributes = {
 					C493D2B5262137F800430150 = {
 						CreatedOnToolsVersion = 12.4;
@@ -184,6 +129,11 @@
 				Base,
 			);
 			mainGroup = C493D2AD262137F800430150;
+			packageReferences = (
+				C4616E65294096B500FE7E2B /* XCRemoteSwiftPackageReference "SwiftShell" */,
+				C4616E68294096F600FE7E2B /* XCRemoteSwiftPackageReference "CryptoSwift" */,
+				C4616E6B2940976900FE7E2B /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
+			);
 			productRefGroup = C493D2B7262137F800430150 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -199,20 +149,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				C493D2BA262137F800430150 /* main.swift in Sources */,
-				C4945E96262D7EBA0063E678 /* Files.swift in Sources */,
 				C4829C8726241B2A00748574 /* toolEx.swift in Sources */,
-				C4945E98262D7EBA0063E678 /* Context.swift in Sources */,
-				C4945E99262D7EBA0063E678 /* String.swift in Sources */,
-				C4945E95262D7EBA0063E678 /* Lazy-split.swift in Sources */,
 				C4829C922624209300748574 /* build.swift in Sources */,
-				C4945E91262D7EBA0063E678 /* Bash.swift in Sources */,
-				C4829C8526241B2A00748574 /* JSONKit.m in Sources */,
-				C4945E93262D7EBA0063E678 /* Array.swift in Sources */,
 				C4829C8D26241FA200748574 /* log.swift in Sources */,
 				C45CD0BC262FCF51005555EC /* buildModel.swift in Sources */,
-				C4945E94262D7EBA0063E678 /* Stream.swift in Sources */,
-				C4945E92262D7EBA0063E678 /* Process.swift in Sources */,
-				C4945E97262D7EBA0063E678 /* Command.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -253,6 +193,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -270,7 +211,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -314,6 +255,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -325,7 +267,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -342,6 +284,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "";
@@ -350,10 +293,10 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "tools/build-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
@@ -367,6 +310,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "";
@@ -375,10 +319,10 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "tools/build-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -405,6 +349,51 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C4616E65294096B500FE7E2B /* XCRemoteSwiftPackageReference "SwiftShell" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kareman/SwiftShell";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
+		C4616E68294096F600FE7E2B /* XCRemoteSwiftPackageReference "CryptoSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/CryptoSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		C4616E6B2940976900FE7E2B /* XCRemoteSwiftPackageReference "SwiftyJSON" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftyJSON/SwiftyJSON.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C4616E66294096B500FE7E2B /* SwiftShell */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C4616E65294096B500FE7E2B /* XCRemoteSwiftPackageReference "SwiftShell" */;
+			productName = SwiftShell;
+		};
+		C4616E69294096F600FE7E2B /* CryptoSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C4616E68294096F600FE7E2B /* XCRemoteSwiftPackageReference "CryptoSwift" */;
+			productName = CryptoSwift;
+		};
+		C4616E6C2940976900FE7E2B /* SwiftyJSON */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C4616E6B2940976900FE7E2B /* XCRemoteSwiftPackageReference "SwiftyJSON" */;
+			productName = SwiftyJSON;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C493D2AE262137F800430150 /* Project object */;
 }

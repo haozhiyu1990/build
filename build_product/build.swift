@@ -6,9 +6,11 @@
 //
 
 import Foundation
+import SwiftShell
+import CryptoSwift
 
 class build {
-    static let currentVersion = "1.3.7"
+    static let currentVersion = "1.4.0"
     
     var arguments: [String]
     var workingSpace: String = ""
@@ -44,76 +46,52 @@ class build {
     
     func checkConfigModel(_ exprot: Bool) {
         if Files.fileExists(atPath: configModel.productPath) {
-            var productUrl = URL(fileURLWithPath: configModel.productPath)
+            let productUrl = URL(fileURLWithPath: configModel.productPath)
             switch productUrl.pathExtension {
-            case "xcodeproj":
-                productUrl.deletePathExtension()
-                configModel.productName = productUrl.pathComponents.last
-                if configModel.productScheme == nil {
-                    configModel.productScheme = configModel.productName
-                }
-                productUrl.deleteLastPathComponent()
-                configModel.productPath = productUrl.path
-                configModel.isHasPod = false
-            case "xcworkspace":
-                productUrl.deletePathExtension()
-                configModel.productName = productUrl.pathComponents.last
-                if configModel.productScheme == nil {
-                    configModel.productScheme = configModel.productName
-                }
-                productUrl.deleteLastPathComponent()
-                configModel.productPath = productUrl.path
-                configModel.isHasPod = true
+            case "xcodeproj", "xcworkspace":
+                loadingConfigModel(productUrl: productUrl.deletingLastPathComponent(), exprot: exprot)
             case "":
-                guard let contents = try? Files.contentsOfDirectory(atPath: productUrl.path) else {
-                    log.shared.red.line("[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
-                    echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
-                    run(bash: "open -R \(configPath)")
-                    return
-                }
-                
-                var xcodeprojs = contents.filter { $0.hasSuffix(".xcodeproj") }
-                xcodeprojs = xcodeprojs.filter { $0 != "Pods.xcodeproj" }
-                var xcworkspaces = contents.filter { $0.hasSuffix(".xcworkspace") }
-                
-                if contents.count == 0 || xcodeprojs.count == 0 {
-                    log.shared.red.line("[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
-                    echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
-                    run(bash: "open -R \(configPath)")
-                    return
-                }
-                if xcodeprojs.count > 1 {
-                    log.shared.red.line("[!] 配置文件 productPath 下有多个项目时，要填写具体项目路径，请前往\(configPath + "/buildConfig")查看")
-                    echoErrLog(err: "[!] 配置文件 productPath 下有多个项目时，要填写具体项目路径，请前往\(configPath + "/buildConfig")查看")
-                    run(bash: "open -R \(configPath)")
-                    return
-                }
-                
-                let xcodeprojName = xcodeprojs.first!.components(separatedBy: ".xcodeproj").first!
-                xcworkspaces = xcworkspaces.filter { $0 == "\(xcodeprojName).xcworkspace" }
-                
-                configModel.productName = xcodeprojName
-                if configModel.productScheme == nil {
-                    configModel.productScheme = configModel.productName
-                }
-                
-                if xcworkspaces.count == 1 {
-                    configModel.isHasPod = true
-                } else {
-                    configModel.isHasPod = false
-                }
-                
-                configModel.productPath = productUrl.path
+                loadingConfigModel(productUrl: productUrl, exprot: exprot)
             default:
-                log.shared.red.line("[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
                 echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
                 run(bash: "open -R \(configPath)")
                 return
             }
         }
+    }
+    
+    func loadingConfigModel(productUrl: URL, exprot: Bool) {
+        guard let contents = try? Files.contentsOfDirectory(atPath: productUrl.path) else {
+            echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
+            run(bash: "open -R \(configPath)")
+            return
+        }
+        
+        var xcodeprojs = contents.filter { $0.hasSuffix(".xcodeproj") }
+        xcodeprojs = xcodeprojs.filter { $0 != "Pods.xcodeproj" }
+        
+        if contents.count == 0 || xcodeprojs.count == 0 {
+            echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
+            run(bash: "open -R \(configPath)")
+            return
+        }
+        if xcodeprojs.count > 1 {
+            echoErrLog(err: "[!] 配置文件 productPath 下有多个项目时，要填写具体项目路径，请前往\(configPath + "/buildConfig")查看")
+            run(bash: "open -R \(configPath)")
+            return
+        }
+        
+        let xcodeprojName = xcodeprojs.first!.components(separatedBy: ".xcodeproj").first!
+        
+        configModel.productName = xcodeprojName
+        if configModel.productScheme == nil {
+            configModel.productScheme = configModel.productName
+        }
+        
+        configModel.isHasPod = contents.contains("Podfile")
+        configModel.productPath = productUrl.path
         
         if configModel.productName == nil || configModel.productScheme == nil || configModel.isHasPod == nil {
-            log.shared.red.line("[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
             echoErrLog(err: "[!] 配置文件 productPath 字段有误，请前往\(configPath + "/buildConfig")查看")
             run(bash: "open -R \(configPath)")
             return
@@ -225,10 +203,8 @@ class build {
             try runAndPrint(bash: "cd \(configModel.productPath); xcodebuild -exportArchive -archivePath \(checkoutPath)/\(configModel.productName!).xcarchive -exportPath \(checkoutPath) -exportOptionsPlist \(configPath)/ExportOptions.plist")
             uploadFir()
         } catch let error as CommandError {
-            log.shared.red.line(error.description)
             echoErrLog(err: error.description)
         } catch {
-            log.shared.red.line(error.localizedDescription)
             echoErrLog(err: error.localizedDescription)
         }
     }
@@ -242,10 +218,8 @@ class build {
             try runAndPrint(bash: "xcodebuild -exportArchive -archivePath \(archivePath) -exportPath \(checkoutPath) -exportOptionsPlist \(configPath)/ExportOptions.plist")
             uploadFir()
         } catch let error as CommandError {
-            log.shared.red.line(error.description)
             echoErrLog(err: error.description)
         } catch {
-            log.shared.red.line(error.localizedDescription)
             echoErrLog(err: error.localizedDescription)
         }
     }
@@ -274,7 +248,6 @@ class build {
     func uploadFir(buildDir: URL? = nil, path: String) {
         let tokenJson = run(bash: "curl -d '_api_key=\(configModel._api_key)&buildUpdateDescription=\(commitMsg)&buildType=ios&buildInstallDate=2' https://www.pgyer.com/apiv2/app/getCOSToken").stdout
         guard let tokenData = tokenJson.data(using: .utf8) else {
-            log.shared.red.line("获取蒲公英上传token失败")
             log.shared.red.line(tokenJson)
             echoErrLog(err: "获取蒲公英上传token失败")
             return
@@ -282,7 +255,6 @@ class build {
         do {
             let pgyerTokenResult = try JSONDecoder().decode(PgyerTokenResult.self, from: tokenData)
             if pgyerTokenResult.code != 0 {
-                log.shared.red.line("蒲公英上传token有误")
                 log.shared.red.line(pgyerTokenResult.message)
                 echoErrLog(err: "蒲公英上传token有误")
                 return
@@ -296,7 +268,6 @@ class build {
                     
                     let buildInfoJsonString = run(bash: "curl -X GET -G --data-urlencode '_api_key=\(self.configModel._api_key)' --data-urlencode 'buildKey=\(pgyerTokenResult.data.key)' https://www.pgyer.com/apiv2/app/buildInfo").stdout
                     guard let buildInfoData = buildInfoJsonString.data(using: .utf8) else {
-                        log.shared.red.line("蒲公英返回数据有误")
                         log.shared.red.line(buildInfoJsonString)
                         echoErrLog(err: "蒲公英返回数据有误")
                         return nil
@@ -304,7 +275,6 @@ class build {
                     do {
                         let ipaModel = try JSONDecoder().decode(IpaModel.self, from: buildInfoData)
                         if ipaModel.code == 1216 {
-                            log.shared.red.line("错误码，1216 应用发布失败")
                             log.shared.red.line(ipaModel.message)
                             echoErrLog(err: "错误码，1216 应用发布失败")
                             return nil
@@ -313,7 +283,6 @@ class build {
                             return ipaModel
                         }
                     } catch {
-                        log.shared.red.line(error.localizedDescription)
                         echoErrLog(err: error.localizedDescription)
                         return nil
                     }
@@ -325,13 +294,12 @@ class build {
                 return
             }
             guard let ipaModelData = ipaModel.data else {
-                log.shared.red.line("蒲公英返回数据为空")
                 echoErrLog(err: "蒲公英返回数据为空")
                 return
             }
 
             log.shared.green.line("上传蒲公英成功")
-            if let dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
+            if var dingtalkWebhook = configModel.dingtalkWebhook, dingtalkWebhook.count > 0 {
                 var text = ""
                 if commitMsgs.count > 0 {
                     text = """
@@ -348,16 +316,20 @@ class build {
                         #### \(ipaModelData.buildName) iOS \(ipaModelData.buildVersion)(build \(ipaModelData.buildBuildVersion))已上传，可以下载测试了，**扫码下载**或[点击下载](https://www.pgyer.com/\(ipaModelData.buildShortcutUrl))
                         """
                 }
+                if let dingtalkSecret = configModel.dingtalkSecret, dingtalkSecret.count > 0 {
+                    let timestamp = Int(Date().timeIntervalSince1970 * 1000)
+                    let singString = "\(timestamp)" + "\n" + dingtalkSecret
+                    let sing = try HMAC(key: dingtalkSecret, variant: .sha2(.sha256)).authenticate(singString.bytes).toBase64().addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                    dingtalkWebhook += "&timestamp=\(timestamp)&sign=\(sing)"
+                }
                 let result = run(bash: "curl '\(dingtalkWebhook)' -H 'Content-Type: application/json' -d '{\"msgtype\": \"markdown\", \"markdown\": {\"title\":\"[测试包]\", \"text\": \"\(text)\"}, \"at\": {\"isAtAll\": true}}'").stdout
                 guard let resultDate = result.data(using: .utf8) else {
-                    log.shared.red.line("钉钉机器人返回结果有误")
                     log.shared.red.line(result)
                     echoErrLog(err: "钉钉机器人返回结果有误")
                     return
                 }
                 let dingdingModel = try JSONDecoder().decode(DingDingModel.self, from: resultDate)
                 if dingdingModel.errcode != 0 {
-                    log.shared.red.line("钉钉机器人消息发送失败")
                     log.shared.red.line(dingdingModel.errmsg)
                     echoErrLog(err: "钉钉机器人消息发送失败")
                     return
@@ -380,10 +352,8 @@ class build {
                 run(bash: "rm \(buildErrLogPath)")
             }
         } catch let error as CommandError {
-            log.shared.red.line(error.description)
             echoErrLog(err: error.description)
         } catch {
-            log.shared.red.line(error.localizedDescription)
             echoErrLog(err: error.localizedDescription)
         }
     }
@@ -437,7 +407,6 @@ class build {
         configArr = configStr.components(separatedBy: "\nend")
         configArr = configArr.filter { $0.contains("product \(buildName) do") }
         if configArr.count != 1 {
-            log.shared.red.line("[!] 配置文件有误，请前往\(configPath + "/buildConfig")查看")
             echoErrLog(err: "[!] 配置文件有误，请前往\(configPath + "/buildConfig")查看")
             run(bash: "open -R \(configPath)")
             return
@@ -511,15 +480,14 @@ class build {
             return nil
         }
         
-        let jsonData = Dictionary(uniqueKeysWithValues: zip(keys, values)).jsonData()
-        guard let model = try? JSONDecoder().decode(Model.self, from: jsonData) else {
-            log.shared.red.line("[!] 配置文件有误，请前往\(configPath + "/buildConfig")查看")
-            echoErrLog(err: "[!] 配置文件有误，请前往\(configPath + "/buildConfig")查看")
-            run(bash: "open -R \(configPath)")
-            return
+        do {
+            let jsonData = try Dictionary(uniqueKeysWithValues: zip(keys, values)).jsonData()
+            let model = try JSONDecoder().decode(Model.self, from: jsonData)
+            configModel = model
+            checkConfigModel(exprot)
+        } catch {
+            echoErrLog(err: error.localizedDescription)
         }
-        configModel = model
-        checkConfigModel(exprot)
     }
     
     func checkaArguments() {
@@ -539,28 +507,32 @@ class build {
         stream.write("""
             #!/usr/bin/ruby -w
             # 如果有多个项目，请写多个 product 'xxx' do ... end
-                        
+            
+            # xxx改为对应的项目名
             product 'xxx' do
                 # productPath\t\t\t\t 对应项目的路径
                 # productScheme\t\t\t\t 对应项目的Scheme
                 # productConfiguration\t\t 对应项目的 configuration  分别为 Release 和  Debug
                 # teamID\t\t\t\t\t 对应的账号 teamID
                 # signingMethod\t\t\t\t 对应的签名方法 ad-hoc development app-store
-                # provisioningProfiles\t\t 如果要手动选择证书和配置文件的话，请填写此项
                 # _api_key\t\t\t\t\t 蒲公英api key
                 # dingtalkWebhook\t\t\t 钉钉自定义机器人的Webhook地址
+                # dingtalkSecret\t\t\t 钉钉自定义机器人的加签密钥
+            
+                # provisioningProfiles\t\t 如果要手动选择证书和配置文件的话，请填写此项
             
                 productPath = 'xxx'\t  # 必传项
-                #productScheme = 'xxx'\t  # productScheme默认为项目名, 如果您的productScheme和项目名不一致，请移除注释, 自行配置
-                #productConfiguration = 'Debug'\t  # 默认为 Release
+                # productScheme = 'xxx'\t  # productScheme默认为项目名, 如果您的productScheme和项目名不一致，请移除注释, 自行配置
+                # productConfiguration = 'Debug'\t  # 默认为 Release
                 teamID = 'xxx'\t  # 必传项
-                #signingMethod = 'ad-hoc'    # 默认为  development
+                # signingMethod = 'ad-hoc'    # 默认为  development
                 _api_key = 'xxx'\t  # 必传项
                 # 钉钉自定义机器人的Webhook地址，可用于向这个群发送消息
-                #dingtalkWebhook = 'xxx'
+                # dingtalkWebhook = 'xxx'
+                # dingtalkSecret = 'xxx'\t  # 3种安全设置方式之一  加签
 
                 # 如果有多个target e.g. [(BundleId: 'bundleid1', profileName: 'name1'), (BundleId: 'bundleid2', profileName: 'name2')]
-                #provisioningProfiles = [(BundleId: 'xxx', profileName: 'xxx')]
+                # provisioningProfiles = [(BundleId: 'xxx', profileName: 'xxx')]
             end
             """)
         stream.close()
@@ -641,13 +613,11 @@ class build {
                 log.shared.red.word("您是想用：")
                 log.shared.green.word("\(command)")
                 log.shared.red.line("?")
-                help()
             }
         case "export":
             if Files.fileExists(atPath: configPath + "/buildConfig") {
                 guard let config = try? String(contentsOfFile: configPath + "/buildConfig", encoding: .utf8) else {
                     log.shared.red.line("[!] 请选运行 init ")
-                    help()
                     return
                 }
                 
@@ -672,21 +642,20 @@ class build {
                     log.shared.red.word("您是想用：")
                     log.shared.green.word("\(command)")
                     log.shared.red.line("?")
-                    help()
                 }
             } else {
                 log.shared.red.line("[!] 请选运行 init ")
-                help()
             }
         case "--help":
             help()
         case "--version":
-            print(build.currentVersion)
+            log.shared.word("build  ")
+            log.shared.brightBlue.line(build.currentVersion)
         default:
             log.shared.red.word("[!] Unknown command（找不到命令）: `\(command)` 尝试使用 ")
             log.shared.word("$ ")
             log.shared.green.line("build --help")
-            echoErrLog(err: "[!] Unknown command（找不到命令）: `\(command)` 尝试使用 $ build --help")
+            echoErrLog(err: "[!] Unknown command（找不到命令）: `\(command)` 尝试使用 $ build --help", isPrint: false)
         }
     }
     
@@ -743,7 +712,13 @@ class build {
         echoErrLog(err: "1、请检查buildConfig是否正确？\n2、所用命令是否正确？")
     }
     
-    func echoErrLog(err: String) {
+    func echoErrLog(err: String, isPrint: Bool = true) {
+        if isPrint {
+            log.shared.red.line(err)
+        }
+        if buildErrLogPath == "" {
+            return
+        }
         guard let stream = try? open(forWriting: buildErrLogPath, overwrite: true) else { return }
         stream.write(err)
         stream.close()

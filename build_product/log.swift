@@ -259,22 +259,25 @@ class log {
         return self
     }
     
+    // MARK: - 终端方法
     // 设置窗口大小
     func windowSize(_ row: Int,_ column: Int) {
         print("\u{1B}[8;\(row);\(column)t")
-
+        fflush(stdout)
     }
     
     // 看不到输入文字
     func hide() {
         parameters.removeAll()
         print("\u{1B}[8m")
+        fflush(stdout)
     }
     
     // 清空格式
     func normal() {
         parameters.removeAll()
         print("\u{1B}[m\u{1B}[m", terminator: "")
+        fflush(stdout)
     }
     
     // 有换行符
@@ -285,6 +288,7 @@ class log {
         } else {
             print("\u{1B}[m\(str)\u{1B}[m")
         }
+        fflush(stdout)
         normal()
     }
     
@@ -296,6 +300,18 @@ class log {
         } else {
             print("\u{1B}[m\(str)\u{1B}[m", terminator: "")
         }
+        fflush(stdout)
         normal()
+    }
+    
+    // 终端进度条  progress  0 ... 100
+    func progress(_ progress: Double) {
+        let count = Int(ceil(72.0/100.0*progress))
+        let str1 = Array(repeating: "#", count: count)
+        let str2 = Array(repeating: "_", count: 72-count)
+        log.shared.word("\r\(str1.joined())\(str2.joined()) \(Int(progress))%")
+        if progress >= 100 {
+            log.shared.line("")
+        }
     }
 }

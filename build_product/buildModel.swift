@@ -18,6 +18,7 @@ struct Model: Codable {
     var provisioningProfiles: [Profile]?
     var _api_key: String
     var dingtalkWebhook: String?
+    var dingtalkSecret: String?
 }
 
 struct Profile: Codable {

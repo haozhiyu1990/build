@@ -6,11 +6,11 @@
 //
 
 import Foundation
+import SwiftyJSON
 
 extension Dictionary {
-    func jsonData() -> Data {
-        let dic = self as NSDictionary
-        return dic.jsonData()
+    func jsonData() throws -> Data {
+        try JSON(self).rawData()
     }
 }
 
