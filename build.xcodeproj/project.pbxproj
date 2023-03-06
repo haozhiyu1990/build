@@ -10,10 +10,7 @@
 		C45CD0BC262FCF51005555EC /* buildModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45CD0BB262FCF50005555EC /* buildModel.swift */; };
 		C4616E67294096B500FE7E2B /* SwiftShell in Frameworks */ = {isa = PBXBuildFile; productRef = C4616E66294096B500FE7E2B /* SwiftShell */; };
 		C4616E6A294096F600FE7E2B /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C4616E69294096F600FE7E2B /* CryptoSwift */; };
-		C47C367229B5C24D00A182EA /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47C367129B5C24D00A182EA /* main.swift */; };
 		C47C367829B5C37D00A182EA /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = C47C367729B5C37D00A182EA /* SwiftyJSON */; };
-		C47C367B29B5C57B00A182EA /* configure.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47C367A29B5C57B00A182EA /* configure.swift */; };
-		C47C367E29B5C6E800A182EA /* SwiftShell in Frameworks */ = {isa = PBXBuildFile; productRef = C47C367D29B5C6E800A182EA /* SwiftShell */; };
 		C4829C8726241B2A00748574 /* toolEx.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4829C8126241B2A00748574 /* toolEx.swift */; };
 		C4829C8D26241FA200748574 /* log.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4829C8C26241FA200748574 /* log.swift */; };
 		C4829C922624209300748574 /* build.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4829C912624209300748574 /* build.swift */; };
@@ -21,15 +18,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		C47C366D29B5C24D00A182EA /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
 		C493D2B4262137F800430150 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -43,9 +31,6 @@
 
 /* Begin PBXFileReference section */
 		C45CD0BB262FCF50005555EC /* buildModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = buildModel.swift; sourceTree = "<group>"; };
-		C47C366F29B5C24D00A182EA /* configure */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = configure; sourceTree = BUILT_PRODUCTS_DIR; };
-		C47C367129B5C24D00A182EA /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		C47C367A29B5C57B00A182EA /* configure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = configure.swift; sourceTree = "<group>"; };
 		C4829C8126241B2A00748574 /* toolEx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = toolEx.swift; sourceTree = "<group>"; };
 		C4829C8C26241FA200748574 /* log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = log.swift; sourceTree = "<group>"; };
 		C4829C912624209300748574 /* build.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = build.swift; sourceTree = "<group>"; };
@@ -55,14 +40,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		C47C366C29B5C24D00A182EA /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				C47C367E29B5C6E800A182EA /* SwiftShell in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		C493D2B3262137F800430150 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -76,29 +53,11 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C47C367029B5C24D00A182EA /* configure_product */ = {
-			isa = PBXGroup;
-			children = (
-				C47C367129B5C24D00A182EA /* main.swift */,
-				C47C367A29B5C57B00A182EA /* configure.swift */,
-			);
-			path = configure_product;
-			sourceTree = "<group>";
-		};
-		C47C367C29B5C6E800A182EA /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		C493D2AD262137F800430150 = {
 			isa = PBXGroup;
 			children = (
 				C493D2B8262137F800430150 /* build_product */,
-				C47C367029B5C24D00A182EA /* configure_product */,
 				C493D2B7262137F800430150 /* Products */,
-				C47C367C29B5C6E800A182EA /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -106,7 +65,6 @@
 			isa = PBXGroup;
 			children = (
 				C493D2B6262137F800430150 /* build */,
-				C47C366F29B5C24D00A182EA /* configure */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -127,26 +85,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C47C366E29B5C24D00A182EA /* configure */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = C47C367529B5C24D00A182EA /* Build configuration list for PBXNativeTarget "configure" */;
-			buildPhases = (
-				C47C366B29B5C24D00A182EA /* Sources */,
-				C47C366C29B5C24D00A182EA /* Frameworks */,
-				C47C366D29B5C24D00A182EA /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = configure;
-			packageProductDependencies = (
-				C47C367D29B5C6E800A182EA /* SwiftShell */,
-			);
-			productName = configure;
-			productReference = C47C366F29B5C24D00A182EA /* configure */;
-			productType = "com.apple.product-type.tool";
-		};
 		C493D2B5262137F800430150 /* build */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C493D2BD262137F800430150 /* Build configuration list for PBXNativeTarget "build" */;
@@ -178,9 +116,6 @@
 				LastSwiftUpdateCheck = 1420;
 				LastUpgradeCheck = 1420;
 				TargetAttributes = {
-					C47C366E29B5C24D00A182EA = {
-						CreatedOnToolsVersion = 14.2;
-					};
 					C493D2B5262137F800430150 = {
 						CreatedOnToolsVersion = 12.4;
 						LastSwiftMigration = 1240;
@@ -206,21 +141,11 @@
 			projectRoot = "";
 			targets = (
 				C493D2B5262137F800430150 /* build */,
-				C47C366E29B5C24D00A182EA /* configure */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		C47C366B29B5C24D00A182EA /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				C47C367B29B5C57B00A182EA /* configure.swift in Sources */,
-				C47C367229B5C24D00A182EA /* main.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		C493D2B2262137F800430150 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -236,36 +161,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		C47C367329B5C24D00A182EA /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = YES;
-				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		C47C367429B5C24D00A182EA /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = YES;
-				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
 		C493D2BB262137F800430150 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -437,15 +332,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C47C367529B5C24D00A182EA /* Build configuration list for PBXNativeTarget "configure" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				C47C367329B5C24D00A182EA /* Debug */,
-				C47C367429B5C24D00A182EA /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		C493D2B1262137F800430150 /* Build configuration list for PBXProject "build" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -508,11 +394,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C47C367629B5C37D00A182EA /* XCRemoteSwiftPackageReference "SwiftyJSON" */;
 			productName = SwiftyJSON;
-		};
-		C47C367D29B5C6E800A182EA /* SwiftShell */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C4616E65294096B500FE7E2B /* XCRemoteSwiftPackageReference "SwiftShell" */;
-			productName = SwiftShell;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

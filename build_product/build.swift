@@ -10,7 +10,7 @@ import SwiftShell
 import CryptoSwift
 
 class build {
-    static let currentVersion = "1.4.3"
+    static let currentVersion = "1.4.4"
     
     var arguments: [String]
     var workingSpace: String = ""
